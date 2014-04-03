@@ -11,6 +11,29 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-extern "C" void __cxa_pure_virtual (void)
+__extension__ typedef int __guard __attribute__((mode (__DI__)));
+
+
+extern "C" void
+__cxa_pure_virtual (void)
+{ }
+
+
+extern "C" int
+__cxa_guard_acquire (__guard* g)
+{
+	return !*reinterpret_cast<char*> (g);
+}
+
+
+extern "C" void
+__cxa_guard_release (__guard* g)
+{
+	*reinterpret_cast<char*> (g) = 1;
+}
+
+
+extern "C" void
+__cxa_guard_abort (__guard*)
 { }
 

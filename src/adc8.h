@@ -198,7 +198,7 @@ class ADC8
 	static float
 	read_relative() noexcept
 	{
-		return read() / 256.0;
+		return read() / 256.0f;
 	}
 
 	/**
@@ -221,7 +221,7 @@ class ADC8
 	static float
 	wait_and_read_relative() noexcept
 	{
-		return wait_and_read() / 256.0;
+		return wait_and_read() / 256.0f;
 	}
 
 	/**
@@ -242,7 +242,7 @@ class ADC8
 	static float
 	sample_and_read_relative() noexcept
 	{
-		return sample_and_read() / 256.0;
+		return sample_and_read() / 256.0f;
 	}
 
 	/**
@@ -260,7 +260,7 @@ class ADC8
 	static float
 	convert_to_voltage (uint16_t value, float reference_voltage) noexcept
 	{
-		return value * reference_voltage / 256.0;
+		return value * reference_voltage / 256.0f;
 	}
 };
 

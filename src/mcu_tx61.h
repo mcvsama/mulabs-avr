@@ -41,14 +41,14 @@ class AtTinyX61
   public:
 	static constexpr Port	a			= { DDRA, PINA, PORTA, PORTA };
 	static constexpr Port	b			= { DDRB, PINB, PORTB, PORTB };
-	static constexpr Pin	a_0			= { b, 0 };
-	static constexpr Pin	a_1			= { b, 1 };
-	static constexpr Pin	a_2			= { b, 2 };
-	static constexpr Pin	a_3			= { b, 3 };
-	static constexpr Pin	a_4			= { b, 4 };
-	static constexpr Pin	a_5			= { b, 5 };
-	static constexpr Pin	a_6			= { b, 6 };
-	static constexpr Pin	a_7			= { b, 7 };
+	static constexpr Pin	a_0			= { a, 0 };
+	static constexpr Pin	a_1			= { a, 1 };
+	static constexpr Pin	a_2			= { a, 2 };
+	static constexpr Pin	a_3			= { a, 3 };
+	static constexpr Pin	a_4			= { a, 4 };
+	static constexpr Pin	a_5			= { a, 5 };
+	static constexpr Pin	a_6			= { a, 6 };
+	static constexpr Pin	a_7			= { a, 7 };
 	static constexpr Pin	b_0			= { b, 0 };
 	static constexpr Pin	b_1			= { b, 1 };
 	static constexpr Pin	b_2			= { b, 2 };

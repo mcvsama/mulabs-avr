@@ -16,6 +16,7 @@
 
 // AVR:
 #include <avr/io.h>
+#include <avr/cpufunc.h>
 
 // Local:
 #include "utility.h"
@@ -197,7 +198,7 @@ class ADC10
 	static float
 	read_relative() noexcept
 	{
-		return read() / 1024.0;
+		return read() / 1024.0f;
 	}
 
 	/**
@@ -220,7 +221,7 @@ class ADC10
 	static float
 	wait_and_read_relative() noexcept
 	{
-		return wait_and_read() / 1024.0;
+		return wait_and_read() / 1024.0f;
 	}
 
 	/**
@@ -241,7 +242,7 @@ class ADC10
 	static float
 	sample_and_read_relative() noexcept
 	{
-		return sample_and_read() / 1024.0;
+		return sample_and_read() / 1024.0f;
 	}
 
 	/**
@@ -259,7 +260,7 @@ class ADC10
 	static float
 	convert_to_voltage (uint16_t value, float reference_voltage) noexcept
 	{
-		return value * reference_voltage / 1024.0;
+		return value * reference_voltage / 1024.0f;
 	}
 };
 
