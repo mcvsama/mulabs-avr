@@ -50,8 +50,8 @@ class USI
 	};
 
   public:
-	static constexpr Pin	scl		= MCU::usi_scl;
-	static constexpr Pin	sda		= MCU::usi_sda;
+	static constexpr MCU::Pin	scl		= MCU::usi_scl;
+	static constexpr MCU::Pin	sda		= MCU::usi_sda;
 
   private:
 	static constexpr uint8_t ModeMask				= 0b00110000;
@@ -65,7 +65,7 @@ class USI
 	static void
 	select_mode (Mode mode)
 	{
-		USICR = USICR & ~ModeMask | static_cast<uint8_t> (mode);
+		USICR = (USICR & ~ModeMask) | static_cast<uint8_t> (mode);
 
 		switch (mode)
 		{
@@ -90,6 +90,10 @@ class USI
 				// open-collector mode, so it's safe to pull them high:
 				scl.set_high();
 				sda.set_high();
+				break;
+
+			case Mode::Disabled:
+			case Mode::ThreeWire:
 				break;
 		}
 	}
@@ -212,7 +216,7 @@ class USI
 	static void
 	set_counter_value (uint8_t value)
 	{
-		USISR = USISR & ~CounterMask | (value & CounterMask);
+		USISR = (USISR & ~CounterMask) | (value & CounterMask);
 	}
 
 	/**
@@ -221,7 +225,7 @@ class USI
 	static void
 	select_counter_clock_source (CounterClockSource source)
 	{
-		USICR = USICR & ~CounterClockSourceMask | static_cast<uint8_t> (source);
+		USICR = (USICR & ~CounterClockSourceMask) | static_cast<uint8_t> (source);
 	}
 
 	/**

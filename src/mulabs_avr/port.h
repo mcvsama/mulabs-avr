@@ -17,154 +17,288 @@
 // AVR:
 #include <avr/io.h>
 
+// Local:
+#include "pin_set.h"
+
 
 namespace mulabs {
 namespace avr {
 
-class Port
-{
-  public:
-	typedef uint8_t volatile& Addr;
-
-  public:
-	constexpr
-	Port (Addr dir, Addr in, Addr out, Addr pue):
-		_dir (dir),
-		_in (in),
-		_out (out),
-		_pue (pue)
-	{ }
-
-	constexpr Addr
-	dir() noexcept
+template<class pRegister>
+	class PortTemplate
 	{
-		return _dir;
-	}
+	  public:
+		typedef pRegister Register;
 
-	constexpr Addr
-	in() noexcept
-	{
-		return _in;
-	}
+	  public:
+		constexpr
+		PortTemplate (Register dir, Register in, Register out, Register pue):
+			_dir (dir),
+			_in (in),
+			_out (out),
+			_pue (pue)
+		{ }
 
-	constexpr Addr
-	out() noexcept
-	{
-		return _out;
-	}
+		constexpr bool
+		operator== (PortTemplate const& other) const
+		{
+			return &_dir == &other._dir
+				&& &_in == &other._in
+				&& &_out == &other._out
+				&& &_pue == &other._pue;
+		}
 
-	constexpr Addr
-	pue() noexcept
-	{
-		return _pue;
-	}
+		constexpr Register
+		dir() noexcept
+		{
+			return _dir;
+		}
 
-  private:
-	Addr const	_dir;
-	Addr const	_in;
-	Addr const	_out;
-	Addr const	_pue;
-};
+		constexpr Register
+		in() noexcept
+		{
+			return _in;
+		}
 
-#if 0
-		/**
-		 * Configure pins direction, 1s denote outputs, 0s - inputs.
-		 *
-		 * See notes for InputPin::read().
-		 */
-		constexpr void
-		configure_directions (Type outputs_mask) noexcept;
+		constexpr Register
+		out() noexcept
+		{
+			return _out;
+		}
+
+		constexpr Register
+		pue() noexcept
+		{
+			return _pue;
+		}
 
 		/**
-		 * Configure pins as outputs. Rest remains unchanged.
+		 * Recursive function that collects Pin bits.
 		 */
-		constexpr void
-		configure_pins_as_outputs (Type outputs_mask) noexcept;
-
-		/*
-		 * Configure pins as inputs. Rest remains unchanged.
-		 *
-		 * See notes for InputPin::read().
-		 */
-		constexpr void
-		configure_pins_as_inputs (Type inputs_mask) noexcept;
+		template<class Pin, class ...Pins>
+			constexpr PinSet
+			make_pin_set (Pin pin, Pins ...pins) const
+			{
+				return PinSet (pin.bit() | make_pin_set (pins...).bits());
+			}
 
 		/**
-		 * Get pin mask for configure_* methods.
+		 * Recursive stop-condition for make_pin_set().
 		 */
-		static constexpr Type
-		pin (uint8_t pin_num) noexcept;
+		template<class Pin>
+			constexpr PinSet
+			make_pin_set (Pin pin) const
+			{
+				return PinSet (pin.bit());
+			}
 
 		/**
-		 * Get InputPin object for this port.
+		 * Pull up a set of pins at once.
+		 * Other pins won't be changed.
+		 * TODO make sure pins have the same _pue as this->_pue.
 		 */
-		constexpr InputPinType const
-		get_input_pin (uint8_t pin) noexcept;
+		void
+		pull_up (PinSet pins) const
+		{
+			_pue |= pins.bits();
+		}
 
 		/**
-		 * Get OutputPin object for this port.
+		 * Same as pull_up (PinSet).
 		 */
-		constexpr OutputPinType const
-		get_output_pin (uint8_t pin) noexcept;
+		template<class ...Pins>
+			void
+			pull_up (Pins ...pins) const
+			{
+				pull_up (make_pin_set (pins...));
+			}
 
+		/**
+		 * Pull up this set of pins, and only this set.
+		 * Other pins will be set to tri-state.
+		 */
+		void
+		pull_up_exclusive (PinSet pins) const
+		{
+			_pue = pins.bits();
+		}
 
-template<class T>
-	constexpr
-	Port<T>::Port (Type volatile& p_out, Type volatile& p_in, Type volatile& direction, Type volatile& pull_up_enable) noexcept:
-		_p_out (p_out),
-		_p_in (p_in),
-		_direction (direction),
-		_pue (pull_up_enable)
-	{ }
+		/**
+		 * Same as pull_up_exclusive (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			pull_up_exclusive (Pins ...pins) const
+			{
+				pull_up_exclusive (make_pin_set (pins...));
+			}
 
+		/**
+		 * Configure as input a set of pins.
+		 * Configuration of other pins won't be changed.
+		 */
+		void
+		configure_as_input (PinSet pins) const
+		{
+			_dir &= ~pins.bits();
+		}
 
-template<class T>
-	inline constexpr void
-	Port<T>::configure_directions (Type outputs_mask) noexcept
-	{
-		_direction = outputs_mask;
-	}
+		/**
+		 * Same as configure_as_input (PinSet);
+		 */
+		template<class ...Pins>
+			void
+			configure_as_input (Pins ...pins) const
+			{
+				configure_as_input (make_pin_set (pins...));
+			}
 
+		/**
+		 * Configure as input this set of pins, and only this set.
+		 * Other pins will be configured as outputs.
+		 */
+		void
+		configure_as_input_exclusive (PinSet pins) const
+		{
+			_dir = ~pins.bits();
+		}
 
-template<class T>
-	inline constexpr void
-	Port<T>::configure_pins_as_outputs (Type outputs_mask) noexcept
-	{
-		_direction |= outputs_mask;
-	}
+		/**
+		 * Same as configure_as_input_exclusive (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			configure_as_input_exclusive (Pins ...pins) const
+			{
+				configure_as_input_exclusive (make_pin_set (pins...));
+			}
 
+		/**
+		 * Configure as output a set of pins.
+		 * Configuration of other pins won't be changed.
+		 */
+		void
+		configure_as_output (PinSet pins) const
+		{
+			_dir |= pins.bits();
+		}
 
-template<class T>
-	inline constexpr void
-	Port<T>::configure_pins_as_inputs (Type inputs_mask) noexcept
-	{
-		_direction &= ~inputs_mask;
-	}
+		/**
+		 * Same as configure_as_output (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			configure_as_output (Pins ...pins) const
+			{
+				configure_as_output (make_pin_set (pins...));
+			}
 
+		/**
+		 * Configure as output this set of pins, and only this set.
+		 * Other pins will be configured as inputs.
+		 */
+		void
+		configure_as_output_exclusive (PinSet pins) const
+		{
+			_dir = pins.bits();
+		}
 
-template<class T>
-	inline constexpr typename Port<T>::Type
-	Port<T>::pin (uint8_t pin_num) noexcept
-	{
-		return bitnum<Type> (pin_num);
-	}
+		/**
+		 * Same as configure_as_output_exclusive (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			configure_as_output_exclusive (Pins ...pins) const
+			{
+				configure_as_output_exclusive (make_pin_set (pins...));
+			}
 
+		/**
+		 * Set high level on given pins.
+		 * Other pins won't be changed.
+		 */
+		void
+		set_high (PinSet pins) const
+		{
+			_out |= pins.bits();
+		}
 
-template<class T>
-	inline constexpr typename Port<T>::InputPinType const
-	Port<T>::get_input_pin (uint8_t pin) noexcept
-	{
-		return InputPinType (*this, pin);
-	}
+		/**
+		 * Same as set_high (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			set_high (Pins ...pins) const
+			{
+				set_high (make_pin_set (pins...));
+			}
 
+		/**
+		 * Set high level on given pins, and only on those pins.
+		 * Other pins will be set to low.
+		 */
+		void
+		set_high_exclusive (PinSet pins) const
+		{
+			_out = pins.bits();
+		}
 
-template<class T>
-	inline constexpr typename Port<T>::OutputPinType const
-	Port<T>::get_output_pin (uint8_t pin) noexcept
-	{
-		return OutputPinType (*this, pin);
-	}
-#endif
+		/**
+		 * Same as set_high_exclusive (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			set_high_exclusive (Pins ...pins) const
+			{
+				set_high_exclusive (make_pin_set (pins...));
+			}
+
+		/**
+		 * Set low level on given pins.
+		 * Other pins won't be changed.
+		 */
+		void
+		set_low (PinSet pins) const
+		{
+			_out &= ~pins.bits();
+		}
+
+		/**
+		 * Same as set_low (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			set_low (Pins ...pins) const
+			{
+				set_low (make_pin_set (pins...));
+			}
+
+		/**
+		 * Set low level on given pins, and only on those pins.
+		 * Other pins will be set to high.
+		 */
+		void
+		set_low_exclusive (PinSet pins) const
+		{
+			_out = ~pins.bits();
+		}
+
+		/**
+		 * Same as set_low_exclusive (PinSet).
+		 */
+		template<class ...Pins>
+			void
+			set_low_exclusive (Pins ...pins) const
+			{
+				set_low_exclusive (make_pin_set (pins...));
+			}
+
+	  private:
+		Register const	_dir;
+		Register const	_in;
+		Register const	_out;
+		Register const	_pue;
+	};
 
 } // namespace avr
 } // namespace mulabs

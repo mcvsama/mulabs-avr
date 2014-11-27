@@ -11,8 +11,11 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__ADC10_H__INCLUDED
-#define MULABS_AVR__ADC10_H__INCLUDED
+#ifndef MULABS_AVR__ADC10_TX61_H__INCLUDED
+#define MULABS_AVR__ADC10_TX61_H__INCLUDED
+
+// STD:
+#include <stdint.h>
 
 // AVR:
 #include <avr/io.h>
@@ -25,38 +28,24 @@
 namespace mulabs {
 namespace avr {
 
-// FIxing moronic C AVR "API":
-#define __ADC ADC
-#undef ADC
-
-class ADC10
+class ADC10_Tx61
 {
   public:
-	enum class Reference: uint8_t
+	enum class Reference: uint16_t
 	{
-		Vcc						= 0b00000000,
-		PB0Pin					= 0b00100000,
-		Int1V1					= 0b01000000,
-		Int2V56NoCapacitor		= 0b11000000,
-		Int2V56WithCapacitor	= 0b11100000,
-	};
-
-	enum class AutoTriggerSource: uint8_t
-	{
-		FreeRunning				= 0b000,
-		AnalogComparator		= 0b001,
-		Interrupt0				= 0b010,
-		Timer0_MatchA			= 0b011,
-		Timer0_Overflow			= 0b100,
-		Timer0_MatchB			= 0b101,
-		PinChangeInterrupt		= 0b110,
+		Vcc						= 0b0000000000000000,
+		PB0Pin					= 0b0000000001000000,
+		Int1V1					= 0b0000000010000000,
+		Int2V56NoCapacitor		= 0b0001000010000000,
+		Int2V56WithCapacitor	= 0b0001000011000000,
 	};
 
   private:
-	static constexpr uint8_t ADMUXReferenceMask			= 0b11100000;
-	static constexpr uint8_t ADMUXInputMask				= 0b00001111;
+	static constexpr uint8_t ADMUXReferenceMaskA		= 0b11000000;
+	static constexpr uint8_t ADCSRBReferenceMaskB		= 0b00010000;
+	static constexpr uint8_t ADMUXInputMaskA			= 0b00011111;
+	static constexpr uint8_t ADCSRBInputMaskB			= 0b00001000;
 	static constexpr uint8_t ADCSRAScaleMask			= 0b00000111;
-	static constexpr uint8_t ADCSRBTriggerSourceMask	= 0b00000111;
 
   public:
 	/**
@@ -109,22 +98,16 @@ class ADC10
 	}
 
 	/**
-	 * Select source of auto-triggering.
-	 */
-	static void
-	select_auto_trigger_source (AutoTriggerSource source) noexcept
-	{
-		ADCSRB = ADCSRB & ~ADCSRBTriggerSourceMask | static_cast<uint8_t> (source);
-	}
-
-	/**
 	 * Select conversion input (0 == ADC0, 1 == ADC1…).
 	 * Won't have any effect until ADC is enabled, see set_enabled().
 	 */
 	static void
-	select_input (uint8_t input) noexcept
+	select_single_ended_input (uint8_t input) noexcept
 	{
-		ADMUX = ADMUX & ~ADMUXInputMask | (input & 0x0f);
+		if (input <= 10)
+			set_mux_bits (input);
+		else if (input == 11)
+			set_mux_bits (0b111111);
 		_NOP();
 	}
 
@@ -169,7 +152,9 @@ class ADC10
 	static void
 	select_reference (Reference reference) noexcept
 	{
-		ADMUX = ADMUX & ~ADMUXReferenceMask | static_cast<uint8_t> (reference);
+		uint16_t reference_int = static_cast<uint16_t> (reference);
+		ADMUX = (ADMUX & ~ADMUXReferenceMaskA) | (static_cast<uint8_t> (reference_int) & ADMUXReferenceMaskA);
+		ADCSRB = (ADCSRB & ~ADCSRBReferenceMaskB) | (static_cast<uint8_t> (reference_int >> 8) & ADCSRBReferenceMaskB);
 	}
 
 	/**
@@ -262,10 +247,18 @@ class ADC10
 	{
 		return value * reference_voltage / 1024.0f;
 	}
+
+  private:
+	/**
+	 * Low level function setting MUX bits.
+	 */
+	static void
+	set_mux_bits (uint8_t value)
+	{
+		ADMUX = (ADMUX & ~ADMUXInputMaskA) | (value & ADMUXInputMaskA);
+		ADCSRB = (ADCSRB & ~ADCSRBInputMaskB) | ((value >> 2) & ADCSRBInputMaskB);
+	}
 };
-
-
-typedef ADC10 ADC;
 
 } // namespace avr
 } // namespace mulabs

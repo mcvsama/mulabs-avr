@@ -26,6 +26,13 @@
 namespace mulabs {
 namespace avr {
 
+/**
+ * An object of this class can handle I2C communication as I2C slave.
+ * Two methods should be called:
+ *  - start_condition() on USI_START interrupt,
+ *  - counter_overflow() on USI_OVF interrupt.
+ * It will call I2CSlave virtual methods to handle addressing and data.
+ */
 class I2CUSISlave: public I2CSlave
 {
 	enum class OnOverflow: uint8_t
@@ -42,9 +49,7 @@ class I2CUSISlave: public I2CSlave
 	/**
 	 * Configures USI for I2C.
 	 *
-	 * Assumes that USI_START and USI_OVF interrupts are already
-	 * configured to call start_condition_detected() and data_transfer_completed(),
-	 * respectively.
+	 * Assumes that USI_START and USI_OVF interrupts are already configured.
 	 */
 	void
 	configure();
@@ -108,7 +113,7 @@ I2CUSISlave::reset()
 }
 
 
-inline void
+void
 I2CUSISlave::start_condition()
 {
 	// Ensure SCL went low:
@@ -134,7 +139,7 @@ I2CUSISlave::start_condition()
 }
 
 
-inline void
+void
 I2CUSISlave::counter_overflow()
 {
 	if (USI::scl.read())
@@ -145,6 +150,9 @@ I2CUSISlave::counter_overflow()
 
 	switch (_on_overflow)
 	{
+		case OnOverflow::Idle:
+			break;
+
 		case OnOverflow::CheckAddress:
 		{
 			uint8_t address = USI::data();

@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__MCU_TX5_H__INCLUDED
-#define MULABS_AVR__MCU_TX5_H__INCLUDED
+#ifndef MULABS_AVR__MCU_TX61_H__INCLUDED
+#define MULABS_AVR__MCU_TX61_H__INCLUDED
 
 // AVR:
 #include <avr/io.h>
@@ -22,6 +22,14 @@
 #include "interrupts.h"
 #include "port.h"
 #include "pin.h"
+#include "timer.h"
+#include "adc10_tx61.h"
+#include "eeprom.h"
+
+
+// Fixing broken C AVR "API":
+#define __ADC ADC
+#undef ADC
 
 
 namespace mulabs {
@@ -38,7 +46,30 @@ class AtTinyX61
 		RisingEdge	= 0b11,
 	};
 
+	typedef uint8_t volatile& Register;
+
+	struct Timer0Config
+	{
+		static constexpr Register	ctl_a		= { TCCR0A };
+		static constexpr Register	ctl_b		= { TCCR0B };
+		static constexpr Register	counter_l	= { TCNT0L };
+		static constexpr Register	counter_h	= { TCNT0H };
+		static constexpr Register	top_l		= { OCR0A };
+		static constexpr Register	top_h		= { OCR0B };
+		static constexpr Register	intr_mask	= { TIMSK };
+		static constexpr Register	intr_flag	= { TIFR };
+	};
+
+	typedef Timer<Timer0Config>		Timer0;
+	typedef ADC10_Tx61				ADC;
+	typedef EEPROM256				EEPROM;
+	typedef PortTemplate<Register>	Port;
+	typedef PinTemplate<Register>	Pin;
+
   public:
+	static constexpr Timer0	timer0		= { };
+	static constexpr ADC	adc			= { };
+	static constexpr EEPROM	eeprom		= { };
 	static constexpr Port	a			= { DDRA, PINA, PORTA, PORTA };
 	static constexpr Port	b			= { DDRB, PINB, PORTB, PORTB };
 	static constexpr Pin	a_0			= { a, 0 };
@@ -81,6 +112,23 @@ class AtTinyX61
 	static constexpr Pin	int_0		= b_6;
 
   public:
+	static constexpr uint8_t
+	get_adc_number (Pin const& pin)
+	{
+		return
+			pin == adc_0 ? 0 :
+			pin == adc_1 ? 1 :
+			pin == adc_2 ? 2 :
+			pin == adc_3 ? 3 :
+			pin == adc_4 ? 4 :
+			pin == adc_5 ? 5 :
+			pin == adc_6 ? 6 :
+			pin == adc_7 ? 7 :
+			pin == adc_8 ? 8 :
+			pin == adc_9 ? 9 :
+			pin == adc_10 ? 10 : -1;
+	}
+
 	/**
 	 * Sleep for given number of milliseconds.
 	 */
@@ -204,7 +252,7 @@ class AtTinyX61
 	static void
 	configure_int01 (IntTrigger trigger)
 	{
-		MCUCR = MCUCR & 0b01111100 | static_cast<uint8_t> (trigger);
+		MCUCR = (MCUCR & 0b01111100) | static_cast<uint8_t> (trigger);
 	}
 
 	/**

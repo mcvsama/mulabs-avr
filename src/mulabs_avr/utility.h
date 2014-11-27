@@ -57,6 +57,14 @@ template<class R>
 
 
 template<class R>
+	static constexpr inline void
+	set_bit_value (R volatile& reg, uint8_t bit, bool value)
+	{
+		value ? set_bit (reg, bit) : clear_bit (reg, bit);
+	}
+
+
+template<class R>
 	static constexpr inline bool
 	get_bit (R const& reg, uint8_t bit)
 	{

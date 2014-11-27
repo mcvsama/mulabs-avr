@@ -2,6 +2,7 @@ MULABS_AVR_HEADERS += mulabs_avr/interrupts.h
 MULABS_AVR_HEADERS += mulabs_avr/adc.h
 MULABS_AVR_HEADERS += mulabs_avr/adc10.h
 MULABS_AVR_HEADERS += mulabs_avr/adc8.h
+MULABS_AVR_HEADERS += mulabs_avr/crap_decoder.h
 MULABS_AVR_HEADERS += mulabs_avr/gray_decoder.h
 MULABS_AVR_HEADERS += mulabs_avr/i2c_slave.h
 MULABS_AVR_HEADERS += mulabs_avr/i2c_soft_slave.h
@@ -14,7 +15,7 @@ MULABS_AVR_HEADERS += mulabs_avr/pin.h
 MULABS_AVR_HEADERS += mulabs_avr/port.h
 MULABS_AVR_HEADERS += mulabs_avr/range.h
 MULABS_AVR_HEADERS += mulabs_avr/st7066.h
-MULABS_AVR_HEADERS += mulabs_avr/smbus.h
+MULABS_AVR_HEADERS += mulabs_avr/timer.h
 MULABS_AVR_HEADERS += mulabs_avr/usi.h
 MULABS_AVR_HEADERS += mulabs_avr/utility.h
 

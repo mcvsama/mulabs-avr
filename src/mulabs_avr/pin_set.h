@@ -11,52 +11,38 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__INTERRUPTS_H__INCLUDED
-#define MULABS_AVR__INTERRUPTS_H__INCLUDED
+#ifndef MULABS_AVR__PIN_SET_H__INCLUDED
+#define MULABS_AVR__PIN_SET_H__INCLUDED
 
 // AVR:
 #include <avr/io.h>
-#include <avr/interrupt.h>
 
 
 namespace mulabs {
 namespace avr {
 
-class InterruptsLock
+/**
+ * Represents set of pins. Used by some functions that can work
+ * on a whole set at once, provided that all pins refer to the
+ * same port.
+ */
+class PinSet
 {
   public:
-	// Ctor
-	InterruptsLock()
-	{
-		cli();
-	}
+	constexpr explicit
+	PinSet (uint8_t bits):
+		_bits (bits)
+	{ }
 
-	// Dtor
-	~InterruptsLock()
+	constexpr uint8_t
+	bits() const
 	{
-		sei();
-	}
-};
-
-
-class RecursiveInterruptsLock
-{
-  public:
-	// Ctor
-	RecursiveInterruptsLock():
-		_saved_sreg (SREG)
-	{
-		cli();
-	}
-
-	// Dtor
-	~RecursiveInterruptsLock()
-	{
-		SREG = _saved_sreg;
+		return _bits;
 	}
 
   private:
-	uint8_t _saved_sreg;
+	uint8_t const _bits;
+	// TODO Register const	reg;
 };
 
 } // namespace avr

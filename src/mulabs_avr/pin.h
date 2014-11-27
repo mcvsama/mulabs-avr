@@ -25,137 +25,161 @@
 namespace mulabs {
 namespace avr {
 
-class Pin
-{
-  public:
-	typedef uint8_t volatile& Addr;
-
-  public:
-	constexpr
-	Pin (Port port, uint8_t pin):
-		_port (port),
-		_pin (pin)
-	{ }
-
-	/**
-	 * Enable/disable digital input buffer on this pin.
-	 * Pins that are used only for analog inputs can disable input buffer.
-	 * By default it's enabled.
-	 * FIXME Currenty only DIDR0 is supported.
-	 */
-	void
-	set_digital_enabled (bool enabled) const noexcept
+template<class pRegister>
+	class PinTemplate
 	{
-		if (enabled)
-			clear_bit (DIDR0, bitnum<uint8_t> (_pin));
-		else
-			set_bit (DIDR0, bitnum<uint8_t> (_pin));
-	}
+	  public:
+		typedef pRegister				Register;
+		typedef PortTemplate<Register>	Port;
 
-	/**
-	 * Configure pin as output.
-	 */
-	void
-	configure_as_output() const noexcept
-	{
-		set_bit (_port.dir(), _pin);
-	}
+	  public:
+		constexpr
+		PinTemplate (Port port, uint8_t pin):
+			_port (port),
+			_pin (pin)
+		{ }
 
-	/**
-	 * Configure pin as input.
-	 *
-	 * See notes for InputPin::read().
-	 */
-	void
-	configure_as_input() const noexcept
-	{
-		clear_bit (_port.dir(), _pin);
-	}
+		constexpr uint8_t
+		pin() const
+		{
+			return _pin;
+		}
 
-	/**
-	 * Read input state.
-	 *
-	 * Note: After configuring pin as input pin, wait at least one cycle
-	 * before attempting to read its value. See ATtiny25 documentation,
-	 * "10.2.4 Reading the Pin Value".
-	 */
-	bool
-	read() const noexcept
-	{
-		return get_bit (_port.in(), _pin);
-	}
+		constexpr uint8_t
+		bit() const
+		{
+			return bitnum<uint8_t> (_pin);
+		}
 
-	/**
-	 * Alias for read().
-	 */
-	bool
-	operator()() const noexcept
-	{
-		return read();
-	}
+		constexpr bool
+		operator== (PinTemplate const& other)
+		{
+			return _port == other._port && _pin == other._pin;
+		}
 
-	/**
-	 * Flip pin (low -> high, high -> low).
-	 */
-	void
-	flip() const noexcept
-	{
-		// Special function of the IN register:
-		set_bit (_port.in(), _pin);
-	}
+#if defined(__AVR_ATtiny10__) || \
+	defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__) || \
+	defined(__AVR_ATtiny261__) || defined(__AVR_ATtiny461__) || defined(__AVR_ATtiny861__)
+		/**
+		 * Enable/disable digital input buffer on this pin.
+		 * Pins that are used only for analog inputs can disable input buffer.
+		 * By default it's enabled.
+		 * FIXME Currenty only DIDR0 is supported.
+		 */
+		void
+		set_digital_enabled (bool enabled) const noexcept
+		{
+			if (enabled)
+				clear_bit (DIDR0, bitnum<uint8_t> (_pin));
+			else
+				set_bit (DIDR0, bitnum<uint8_t> (_pin));
+		}
+#endif
 
-	/**
-	 * Set pin to high.
-	 */
-	void
-	set_high() const noexcept
-	{
-		set_bit (_port.out(), _pin);
-	}
+		/**
+		 * Configure pin as output.
+		 */
+		void
+		configure_as_output() const noexcept
+		{
+			set_bit (_port.dir(), _pin);
+		}
 
-	/**
-	 * Set pin to low.
-	 */
-	void
-	set_low() const noexcept
-	{
-		clear_bit (_port.out(), _pin);
-	}
+		/**
+		 * Configure pin as input.
+		 *
+		 * See notes for InputPin::read().
+		 */
+		void
+		configure_as_input() const noexcept
+		{
+			clear_bit (_port.dir(), _pin);
+		}
 
-	/**
-	 * Set pin to given value.
-	 */
-	void
-	set (bool value) const noexcept
-	{
-		if (value)
-			set_high();
-		else
-			set_low();
-	}
+		/**
+		 * Read input state.
+		 *
+		 * Note: After configuring pin as input pin, wait at least one cycle
+		 * before attempting to read its value. See ATtiny25 documentation,
+		 * "10.2.4 Reading the Pin Value".
+		 */
+		bool
+		read() const noexcept
+		{
+			return get_bit (_port.in(), _pin);
+		}
 
-	/**
-	 * Enable pull-up resistor.
-	 */
-	void
-	pull_up() const noexcept
-	{
-		set_bit (_port.pue(), _pin);
-	}
+		/**
+		 * Alias for read().
+		 */
+		bool
+		operator()() const noexcept
+		{
+			return read();
+		}
 
-	/**
-	 * Disable pull-up resistor.
-	 */
-	void
-	set_tri_state() const noexcept
-	{
-		clear_bit (_port.pue(), _pin);
-	}
+		/**
+		 * Flip pin (low -> high, high -> low).
+		 */
+		void
+		flip() const noexcept
+		{
+			// Special function of the IN register:
+			set_bit (_port.in(), _pin);
+		}
 
-  private:
-	Port const		_port;
-	uint8_t const	_pin;
-};
+		/**
+		 * Set pin to high.
+		 */
+		void
+		set_high() const noexcept
+		{
+			set_bit (_port.out(), _pin);
+		}
+
+		/**
+		 * Set pin to low.
+		 */
+		void
+		set_low() const noexcept
+		{
+			clear_bit (_port.out(), _pin);
+		}
+
+		/**
+		 * Set pin to given value.
+		 */
+		void
+		set (bool value) const noexcept
+		{
+			if (value)
+				set_high();
+			else
+				set_low();
+		}
+
+		/**
+		 * Enable pull-up resistor.
+		 */
+		void
+		pull_up() const noexcept
+		{
+			set_bit (_port.pue(), _pin);
+		}
+
+		/**
+		 * Disable pull-up resistor.
+		 */
+		void
+		set_tri_state() const noexcept
+		{
+			clear_bit (_port.pue(), _pin);
+		}
+
+	  private:
+		Port const		_port;
+		uint8_t const	_pin;
+	};
 
 } // namespace avr
 } // namespace mulabs

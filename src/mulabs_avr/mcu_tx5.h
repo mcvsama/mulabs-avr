@@ -20,6 +20,7 @@
 
 // Local:
 #include "interrupts.h"
+#include "avr8.h"
 #include "port.h"
 #include "pin.h"
 
@@ -27,7 +28,7 @@
 namespace mulabs {
 namespace avr {
 
-class AtTinyX5
+class AtTinyX5: public AVR8
 {
   public:
 	enum class Int0Trigger: uint8_t
@@ -182,7 +183,7 @@ class AtTinyX5
 	static void
 	configure_int0 (Int0Trigger trigger)
 	{
-		MCUCR = MCUCR & 0b01111100 | static_cast<uint8_t> (trigger);
+		MCUCR = (MCUCR & 0b01111100) | static_cast<uint8_t> (trigger);
 	}
 
 	/**

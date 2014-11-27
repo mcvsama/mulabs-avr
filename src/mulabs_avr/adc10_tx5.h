@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__ADC8_H__INCLUDED
-#define MULABS_AVR__ADC8_H__INCLUDED
+#ifndef MULABS_AVR__ADC10_TX5_H__INCLUDED
+#define MULABS_AVR__ADC10_TX5_H__INCLUDED
 
 // STD:
 #include <stdint.h>
@@ -28,16 +28,16 @@
 namespace mulabs {
 namespace avr {
 
-class ADC8
+class ADC10_Tx5
 {
   public:
 	enum class Reference: uint8_t
 	{
 		Vcc						= 0b00000000,
-		PB0Pin					= 0b00100000,
-		Int1V1					= 0b01000000,
-		Int2V56NoCapacitor		= 0b11000000,
-		Int2V56WithCapacitor	= 0b11100000,
+		PB0Pin					= 0b01000000,
+		Int1V1					= 0b10000000,
+		Int2V56NoCapacitor		= 0b10010000,
+		Int2V56WithCapacitor	= 0b11010000,
 	};
 
 	enum class AutoTriggerSource: uint8_t
@@ -52,7 +52,7 @@ class ADC8
 	};
 
   private:
-	static constexpr uint8_t ADMUXReferenceMask			= 0b11100000;
+	static constexpr uint8_t ADMUXReferenceMask			= 0b11010000;
 	static constexpr uint8_t ADMUXInputMask				= 0b00001111;
 	static constexpr uint8_t ADCSRAScaleMask			= 0b00000111;
 	static constexpr uint8_t ADCSRBTriggerSourceMask	= 0b00000111;
@@ -78,9 +78,9 @@ class ADC8
 	set_free_running (bool free_running) noexcept
 	{
 		if (free_running)
-			set_bit (ADCSRA, ADATE);
+			set_bit (ADCSRA, 5);
 		else
-			clear_bit (ADCSRA, ADATE);
+			clear_bit (ADCSRA, 5);
 	}
 
 	/**
@@ -188,7 +188,7 @@ class ADC8
 	static uint16_t
 	read() noexcept
 	{
-		return ADCL;
+		return ADCL + ADCH * 256;
 	}
 
 	/**
@@ -197,7 +197,7 @@ class ADC8
 	static float
 	read_relative() noexcept
 	{
-		return read() / 256.0f;
+		return read() / 1024.0f;
 	}
 
 	/**
@@ -220,7 +220,7 @@ class ADC8
 	static float
 	wait_and_read_relative() noexcept
 	{
-		return wait_and_read() / 256.0f;
+		return wait_and_read() / 1024.0f;
 	}
 
 	/**
@@ -241,7 +241,7 @@ class ADC8
 	static float
 	sample_and_read_relative() noexcept
 	{
-		return sample_and_read() / 256.0f;
+		return sample_and_read() / 1024.0f;
 	}
 
 	/**
@@ -259,7 +259,7 @@ class ADC8
 	static float
 	convert_to_voltage (uint16_t value, float reference_voltage) noexcept
 	{
-		return value * reference_voltage / 256.0f;
+		return value * reference_voltage / 1024.0f;
 	}
 };
 

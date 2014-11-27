@@ -23,6 +23,12 @@
 #include "utility.h"
 #include "port.h"
 #include "pin.h"
+#include "adc8.h"
+
+
+// Fixing broken C AVR "API":
+#define __ADC ADC
+#undef ADC
 
 
 namespace mulabs {
@@ -46,7 +52,10 @@ class AtTiny10
 		External		= 0b10,
 	};
 
+	typedef ADC8 ADC;
+
   public:
+	static constexpr ADC	adc	= { };
 	static constexpr Port	b	= { DDRB, PINB, PORTB, PUEB };
 	static constexpr Pin	b_0	= { b, 0 };
 	static constexpr Pin	b_1	= { b, 1 };
@@ -172,7 +181,7 @@ class AtTiny10
 	static void
 	configure_int0 (Int0Trigger trigger)
 	{
-		EICRA = EICRA & 0b01111100 | static_cast<uint8_t> (trigger);
+		EICRA = (EICRA & 0b01111100) | static_cast<uint8_t> (trigger);
 	}
 
 	/**

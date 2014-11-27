@@ -43,7 +43,7 @@ namespace avr {
  *
  *			Also it should contain constexpr uint8_t:
  *
- *			  * columns (number of columns in the display)
+ *			  * row_pitch (number of columns in the display)
  */
 template<class tConfig>
 	class ST7066
@@ -531,7 +531,9 @@ template<class P>
 	{
 		prepare_for_read (ReadMode::BusyAddress);
 		read();
-		return Config::db_7.read();
+		bool b = Config::db_7.read();
+		read(); // Read lower 4-bits:
+		return b;
 	}
 
 
@@ -539,7 +541,6 @@ template<class P>
 	inline void
 	ST7066<P>::wait()
 	{
-		MCU::sleep_ms<2>();
 		while (busy())
 			continue;
 	}

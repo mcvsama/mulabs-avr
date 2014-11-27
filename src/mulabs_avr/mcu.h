@@ -26,5 +26,9 @@
 #include "mcu_tx61.h"
 #endif
 
+#if defined(__AVR_ATmega32__)
+#include "mcu_m32.h"
+#endif
+
 #endif
 

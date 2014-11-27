@@ -11,18 +11,29 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__GRAY_DECODER_H__INCLUDED
-#define MULABS_AVR__GRAY_DECODER_H__INCLUDED
+#ifndef MULABS_AVR__CRAP_DECODER_H__INCLUDED
+#define MULABS_AVR__CRAP_DECODER_H__INCLUDED
+
+#include "gray_decoder.h"
+
 
 namespace mulabs {
 namespace avr {
 
-class GrayDecoder
+/**
+ * This is a decoder for crappy rotary encoders, designed most probably by some morons,
+ * that change output by two Gray steps on every rotation step, instead of one.
+ *
+ * Crap-encoder output table:
+ *   A: 1 1 0 0 1 1 0
+ *   B: 1 0 0 1 1 0 0
+ *        ↑   ↑   ↑ - Stable position
+ */
+class CrapDecoder
 {
   public:
-	GrayDecoder (bool init_a = false, bool init_b = false):
-		_prev_a (init_a),
-		_prev_b (init_b)
+	CrapDecoder (bool init_a = false, bool init_b = false):
+		_gray_decoder (init_a, init_b)
 	{ }
 
 	/**
@@ -31,8 +42,7 @@ class GrayDecoder
 	void
 	reset (bool init_a, bool init_b)
 	{
-		_prev_a = init_a;
-		_prev_b = init_b;
+		_gray_decoder.reset (init_a, init_b);
 	}
 
 	/**
@@ -42,25 +52,21 @@ class GrayDecoder
 	int8_t
 	update (bool a, bool b)
 	{
-		int8_t da = _prev_a - a;
-		int8_t db = _prev_b - b;
+		int8_t result = 0;
+		_sum += _gray_decoder.update (a, b);
 
-		if (da == 0 && db == 0)
-			return 0;
-
-		int8_t result = (da == 1 && b == 0) || (a == 1 && db == 1) || (da == -1 && b == 1) || (a == 0 && db == -1)
-			? +1
-			: -1;
-
-		_prev_a = a;
-		_prev_b = b;
+		if (_sum == 2 || _sum == -2)
+		{
+			result = _sum / 2;
+			_sum = 0;
+		}
 
 		return result;
 	}
 
   private:
-	bool	_prev_a;
-	bool	_prev_b;
+	GrayDecoder	_gray_decoder;
+	int8_t		_sum = 0;
 };
 
 } // namespace avr

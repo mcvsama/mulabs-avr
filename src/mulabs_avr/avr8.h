@@ -11,16 +11,29 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__ADC_H__INCLUDED
-#define MULABS_AVR__ADC_H__INCLUDED
+#ifndef MULABS_AVR__AVR8_H__INCLUDED
+#define MULABS_AVR__AVR8_H__INCLUDED
 
-#if defined(__AVR_ATtiny10__)
-#include "adc8.h"
-#endif
+// Local:
+#include "interrupts.h"
+#include "port.h"
+#include "pin.h"
 
-#if defined(__AVR_ATtiny25__)
-#include "adc10.h"
-#endif
+
+namespace mulabs {
+namespace avr {
+
+class AVR8
+{
+  public:
+	typedef uint8_t volatile& Register;
+
+	typedef PortTemplate<Register>	Port;
+	typedef PinTemplate<Register>	Pin;
+};
+
+} // namespace avr
+} // namespace mulabs
 
 #endif
 
