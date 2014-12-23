@@ -293,6 +293,15 @@ template<class pRegister>
 				set_low_exclusive (make_pin_set (pins...));
 			}
 
+		/**
+		 * Read the whole port at once.
+		 */
+		uint8_t
+		read() const
+		{
+			return in();
+		}
+
 	  private:
 		Register const	_dir;
 		Register const	_in;
