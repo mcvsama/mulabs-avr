@@ -11,17 +11,14 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__USI_H__INCLUDED
-#define MULABS_AVR__USI_H__INCLUDED
+#ifndef MULABS_AVR__DEVICES__USI_H__INCLUDED
+#define MULABS_AVR__DEVICES__USI_H__INCLUDED
 
 // AVR:
 #include <avr/io.h>
 
 // Local:
-#include "utility.h"
-#include "interrupts.h"
-#include "mcu.h"
-#include "pin.h"
+#include <mulabs_avr/avr/interrupts_lock.h>
 
 
 namespace mulabs {

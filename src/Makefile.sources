@@ -1,23 +1,36 @@
-MULABS_AVR_HEADERS += mulabs_avr/interrupts.h
-MULABS_AVR_HEADERS += mulabs_avr/adc.h
-MULABS_AVR_HEADERS += mulabs_avr/adc10.h
-MULABS_AVR_HEADERS += mulabs_avr/adc8.h
-MULABS_AVR_HEADERS += mulabs_avr/crap_decoder.h
-MULABS_AVR_HEADERS += mulabs_avr/gray_decoder.h
-MULABS_AVR_HEADERS += mulabs_avr/i2c_slave.h
-MULABS_AVR_HEADERS += mulabs_avr/i2c_soft_slave.h
-MULABS_AVR_HEADERS += mulabs_avr/i2c_usi_slave.h
-MULABS_AVR_HEADERS += mulabs_avr/mcu.h
-MULABS_AVR_HEADERS += mulabs_avr/mcu_t10.h
-MULABS_AVR_HEADERS += mulabs_avr/mcu_t25.h
+MULABS_AVR_HEADERS += mulabs_avr/avr/avr_fixes.h
+MULABS_AVR_HEADERS += mulabs_avr/avr/basic_register16.h
+MULABS_AVR_HEADERS += mulabs_avr/avr/basic_register8.h
+MULABS_AVR_HEADERS += mulabs_avr/avr/interrupts_lock.h
+
+MULABS_AVR_HEADERS += mulabs_avr/devices/xmega_au/basic_io.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/xmega_au/basic_pin.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/xmega_au/basic_pin_i.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/xmega_au/basic_pin_set.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/xmega_au/basic_port.h
+
+MULABS_AVR_HEADERS += mulabs_avr/devices/adc10_tx5.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/adc10_tx61.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/adc8.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/attiny_port.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/atxmega_port.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/eeprom.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/i2c_slave.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/i2c_usi_master.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/i2c_usi_slave.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/timer.h
+MULABS_AVR_HEADERS += mulabs_avr/devices/usi.h
+
+MULABS_AVR_HEADERS += mulabs_avr/mcu/atxmega128-a1u.h
+
+MULABS_AVR_HEADERS += mulabs_avr/support/st7066.h
+
+MULABS_AVR_HEADERS += mulabs_avr/utility/bits.h
+MULABS_AVR_HEADERS += mulabs_avr/utility/crap_decoder.h
+MULABS_AVR_HEADERS += mulabs_avr/utility/gray_decoder.h
+MULABS_AVR_HEADERS += mulabs_avr/utility/range.h
+
 MULABS_AVR_HEADERS += mulabs_avr/memory.h
-MULABS_AVR_HEADERS += mulabs_avr/pin.h
-MULABS_AVR_HEADERS += mulabs_avr/port.h
-MULABS_AVR_HEADERS += mulabs_avr/range.h
-MULABS_AVR_HEADERS += mulabs_avr/st7066.h
-MULABS_AVR_HEADERS += mulabs_avr/timer.h
-MULABS_AVR_HEADERS += mulabs_avr/usi.h
-MULABS_AVR_HEADERS += mulabs_avr/utility.h
 
 MULABS_AVR_SOURCES += mulabs_avr/cxa.cc
 

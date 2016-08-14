@@ -11,10 +11,10 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__ADC10_TX61_H__INCLUDED
-#define MULABS_AVR__ADC10_TX61_H__INCLUDED
+#ifndef MULABS_AVR__DEVICES__ADC10_TX61_H__INCLUDED
+#define MULABS_AVR__DEVICES__ADC10_TX61_H__INCLUDED
 
-// STD:
+// Standard:
 #include <stdint.h>
 
 // AVR:

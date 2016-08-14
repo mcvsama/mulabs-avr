@@ -11,26 +11,48 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__AVR8_H__INCLUDED
-#define MULABS_AVR__AVR8_H__INCLUDED
+#ifndef MULABS_AVR__AVR__INTERRUPTS_LOCK_H__INCLUDED
+#define MULABS_AVR__AVR__INTERRUPTS_LOCK_H__INCLUDED
+
+// AVR:
+#include <avr/io.h>
+#include <avr/interrupt.h>
 
 // Local:
-#include "interrupts.h"
-#include "port.h"
-#include "pin.h"
+#include <mulabs_avr/utility/bits.h>
 
 
 namespace mulabs {
 namespace avr {
 
-class AVR8
+class InterruptsLock
 {
   public:
-	typedef uint8_t volatile& Register;
+	// Ctor
+	InterruptsLock();
 
-	typedef PortTemplate<Register>	Port;
-	typedef PinTemplate<Register>	Pin;
+	// Dtor
+	~InterruptsLock();
+
+  private:
+	int _saved_interrupt_flag;
 };
+
+
+InterruptsLock::InterruptsLock()
+{
+	_saved_interrupt_flag = get_bit (SREG, 7);
+	cli();
+}
+
+
+InterruptsLock::~InterruptsLock()
+{
+	if (_saved_interrupt_flag)
+		set_bit (SREG, 7);
+	else
+		clear_bit (SREG, 7);
+}
 
 } // namespace avr
 } // namespace mulabs

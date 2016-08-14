@@ -11,10 +11,11 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__EEPROM_H__INCLUDED
-#define MULABS_AVR__EEPROM_H__INCLUDED
+#ifndef MULABS_AVR__DEVICES__EEPROM_H__INCLUDED
+#define MULABS_AVR__DEVICES__EEPROM_H__INCLUDED
 
-#include "interrupts.h"
+// Mulabs AVR:
+#include <mulabs_avr/avr/interrupts_lock.h>
 
 
 namespace mulabs {
@@ -78,10 +79,12 @@ class EEPROM256
 	void
 	write (uint8_t address, uint8_t value) const
 	{
-		RecursiveInterruptsLock lock;
+		InterruptsLock lock;
 
 		wait();
+
 		// TODO
+		throw "unimplemented";
 	}
 
 	/**
@@ -90,7 +93,7 @@ class EEPROM256
 	void
 	rewrite (uint8_t address, uint8_t value) const
 	{
-		RecursiveInterruptsLock lock;
+		InterruptsLock lock;
 
 		wait();
 		EECR = static_cast<uint8_t> (Mode::Rewrite);
@@ -107,7 +110,7 @@ class EEPROM256
 	uint8_t
 	read (uint8_t address) const
 	{
-		RecursiveInterruptsLock lock;
+		InterruptsLock lock;
 
 		wait();
 		EEAR = address;

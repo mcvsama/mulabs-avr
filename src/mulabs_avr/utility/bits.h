@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__UTILITY_H__INCLUDED
-#define MULABS_AVR__UTILITY_H__INCLUDED
+#ifndef MULABS_AVR__UTILITY__BITS_H__INCLUDED
+#define MULABS_AVR__UTILITY__BITS_H__INCLUDED
 
 // AVR:
 #include <util/delay.h>
