@@ -17,6 +17,7 @@
 // AVR:
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
+#include <util/delay.h>
 
 // Mulabs AVR:
 #include <mulabs_avr/avr/avr_fixes.h>
@@ -25,7 +26,11 @@
 #include <mulabs_avr/devices/xmega_au/basic_clock.h>
 #include <mulabs_avr/devices/xmega_au/basic_io.h>
 #include <mulabs_avr/devices/xmega_au/basic_pin.h>
+#include <mulabs_avr/devices/xmega_au/basic_pin_set.h>
 #include <mulabs_avr/devices/xmega_au/basic_port.h>
+#include <mulabs_avr/utility/array.h>
+#include <mulabs_avr/utility/type_traits.h>
+#include <mulabs_avr/mcu/atxmega128-a1u-ports.h>
 
 
 namespace mulabs {
@@ -34,38 +39,56 @@ namespace avr {
 class ATXMega128A1U
 {
   public:
-	static constexpr uint8_t kNumPorts	= 14;
+	static constexpr uint8_t kNumPorts	= 11;
 
-	typedef ATXMega128A1U				MCU;
-	typedef BasicRegister8				Register8;
-	typedef BasicRegister16				Register16;
-	typedef uint8_t						PortIntegerType;
-	typedef PortIntegerType				Pins[kNumPorts];
+	typedef ATXMega128A1U						MCU;
+	typedef BasicRegister8						Register8;
+	typedef BasicRegister16						Register16;
+	typedef uint8_t								PortIntegerType;
+	typedef Array<PortIntegerType, kNumPorts>	Pins;
 
-	typedef xmega_au::BasicClock<MCU>	Clock;
-	typedef xmega_au::BasicIO<MCU>		IO;
-	typedef xmega_au::BasicPin<MCU>		Pin;
-	typedef xmega_au::BasicPort<MCU>	Port;
+	typedef xmega_au::BasicClock<MCU>			Clock;
+	typedef xmega_au::BasicIO<MCU>				IO;
+	typedef xmega_au::BasicPin<MCU>				Pin;
+	typedef xmega_au::BasicPort<MCU>			Port;
+	typedef xmega_au::BasicPinSet<MCU>			PinSet;
 
-#define MULABS_DECLARE_PORT(member_name, avr_port_prefix) \
+	static_assert (is_literal_type<Register8>::value, "Register8 must be a literal type");
+	static_assert (is_literal_type<Register16>::value, "Register16 must be a literal type");
+	static_assert (is_literal_type<Clock>::value, "Clock must be a literal type");
+	static_assert (is_literal_type<IO>::value, "IO must be a literal type");
+	static_assert (is_literal_type<Pin>::value, "Pin must be a literal type");
+	static_assert (is_literal_type<PinSet>::value, "PinSet must be a literal type");
+	static_assert (is_literal_type<Port>::value, "Port must be a literal type");
+	static_assert (is_literal_type<Pins>::value, "Pins must be a literal type");
+
+#define MULABS_DECLARE_PORT(member_name, avr_port_prefix, port_number) \
 	static constexpr Port member_name { \
-		0, \
-		MULABS_REG (avr_port_prefix##_DIR), MULABS_REG (avr_port_prefix##_DIRSET), MULABS_REG (avr_port_prefix##_DIRCLR), MULABS_REG (avr_port_prefix##_DIRTGL), \
-		MULABS_REG (avr_port_prefix##_OUT), MULABS_REG (avr_port_prefix##_OUTSET), MULABS_REG (avr_port_prefix##_OUTCLR), MULABS_REG (avr_port_prefix##_OUTTGL), \
-		MULABS_REG (avr_port_prefix##_IN), \
-		MULABS_REG (avr_port_prefix##_INTCTRL), MULABS_REG (avr_port_prefix##_INT0MASK), MULABS_REG (avr_port_prefix##_INT1MASK), MULABS_REG (avr_port_prefix##_INTFLAGS), \
-		MULABS_REG (avr_port_prefix##_PIN0CTRL), MULABS_REG (avr_port_prefix##_PIN1CTRL), MULABS_REG (avr_port_prefix##_PIN2CTRL), MULABS_REG (avr_port_prefix##_PIN3CTRL), \
-		MULABS_REG (avr_port_prefix##_PIN4CTRL), MULABS_REG (avr_port_prefix##_PIN5CTRL), MULABS_REG (avr_port_prefix##_PIN6CTRL), MULABS_REG (avr_port_prefix##_PIN7CTRL), \
+		port_number, \
+		avr_port_prefix##_DIR, avr_port_prefix##_DIRSET, avr_port_prefix##_DIRCLR, avr_port_prefix##_DIRTGL, \
+		avr_port_prefix##_OUT, avr_port_prefix##_OUTSET, avr_port_prefix##_OUTCLR, avr_port_prefix##_OUTTGL, \
+		avr_port_prefix##_IN, \
+		avr_port_prefix##_INTCTRL, avr_port_prefix##_INT0MASK, avr_port_prefix##_INT1MASK, avr_port_prefix##_INTFLAGS, \
+		avr_port_prefix##_PIN0CTRL, avr_port_prefix##_PIN1CTRL, avr_port_prefix##_PIN2CTRL, avr_port_prefix##_PIN3CTRL, \
+		avr_port_prefix##_PIN4CTRL, avr_port_prefix##_PIN5CTRL, avr_port_prefix##_PIN6CTRL, avr_port_prefix##_PIN7CTRL, \
 	};
 
-	MULABS_DECLARE_PORT(port_a, PORTA)
-	MULABS_DECLARE_PORT(port_b, PORTB)
-	MULABS_DECLARE_PORT(port_c, PORTC)
-	MULABS_DECLARE_PORT(port_d, PORTD)
-	MULABS_DECLARE_PORT(port_e, PORTE)
-	MULABS_DECLARE_PORT(port_f, PORTF)
+	MULABS_DECLARE_PORT(port_a, kPORTA, 0)
+	MULABS_DECLARE_PORT(port_b, kPORTB, 1)
+	MULABS_DECLARE_PORT(port_c, kPORTC, 2)
+	MULABS_DECLARE_PORT(port_d, kPORTD, 3)
+	MULABS_DECLARE_PORT(port_e, kPORTE, 4)
+	MULABS_DECLARE_PORT(port_f, kPORTF, 5)
+	MULABS_DECLARE_PORT(port_h, kPORTH, 6)
+	MULABS_DECLARE_PORT(port_j, kPORTJ, 7)
+	MULABS_DECLARE_PORT(port_k, kPORTK, 8)
+	MULABS_DECLARE_PORT(port_q, kPORTQ, 9)
+	MULABS_DECLARE_PORT(port_r, kPORTR, 10)
 
 #undef MULABS_DECLARE_PORT
+
+	static constexpr Port	ports_index[kNumPorts] = { port_a, port_b, port_c, port_d, port_e,
+													   port_f, port_h, port_j, port_k, port_q, port_r };
 
   public:
 	/**

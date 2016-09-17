@@ -36,7 +36,7 @@ template<class pMCU>
 	  public:
 		// Ctor:
 		constexpr
-		BasicPort (uint8_t index,
+		BasicPort (uint8_t port_number,
 				   Register8 dir, Register8 dirset, Register8 dirclr, Register8 dirtgl,
 				   Register8 out, Register8 outset, Register8 outclr, Register8 outtgl,
 				   Register8 in,
@@ -50,10 +50,17 @@ template<class pMCU>
 		constexpr bool
 		operator!= (BasicPort const& other) const;
 
+		/**
+		 * Return Pin object by bit number.
+		 */
 		constexpr Pin
 		pin (uint8_t pin_number) const;
 
-		// TODO set dir
+		/**
+		 * Return this port's number.
+		 */
+		constexpr uint8_t
+		port_number() const;
 
 		/**
 		 * Write byte to all pins on port at once.
@@ -97,16 +104,28 @@ template<class pMCU>
 		operator uint8_t() const;
 
 		/**
-		 * Configure individual pin as output.
+		 * Configure pins denoted by set bits as inputs.
 		 */
 		void
-		pin_configure_as_output (uint8_t pin_number) const;
+		configure_as_inputs (typename MCU::PortIntegerType pin_bits) const;
+
+		/**
+		 * Configure pins denoted by set bits as outputs.
+		 */
+		void
+		configure_as_outputs (typename MCU::PortIntegerType pin_bits) const;
 
 		/**
 		 * Configure individual pin as input.
 		 */
 		void
 		pin_configure_as_input (uint8_t pin_number) const;
+
+		/**
+		 * Configure individual pin as output.
+		 */
+		void
+		pin_configure_as_output (uint8_t pin_number) const;
 
 		/**
 		 * Set individual pin to given logic value.
@@ -139,7 +158,7 @@ template<class pMCU>
 		pin_get (uint8_t pin_number) const;
 
 	  private:
-		uint8_t		_index;
+		uint8_t		_port_number;
 		Register8	_dir, _dirset, _dirclr, _dirtgl;
 		Register8	_out, _outset, _outclr, _outtgl;
 		Register8	_in;
@@ -151,14 +170,14 @@ template<class pMCU>
 
 template<class M>
 	constexpr
-	BasicPort<M>::BasicPort (uint8_t index,
+	BasicPort<M>::BasicPort (uint8_t port_number,
 							 Register8 dir, Register8 dirset, Register8 dirclr, Register8 dirtgl,
 							 Register8 out, Register8 outset, Register8 outclr, Register8 outtgl,
 							 Register8 in,
 							 Register8 intctrl, Register8 int0mask, Register8 int1mask, Register8 intflags,
 							 Register8 pin0ctrl, Register8 pin1ctrl, Register8 pin2ctrl, Register8 pin3ctrl,
 							 Register8 pin4ctrl, Register8 pin5ctrl, Register8 pin6ctrl, Register8 pin7ctrl):
-		_index (index),
+		_port_number (port_number),
 		_dir (dir), _dirset (dirset), _dirclr (dirclr), _dirtgl (dirtgl),
 		_out (out), _outset (outset), _outclr (outclr), _outtgl (outtgl),
 		_in (in),
@@ -173,7 +192,7 @@ template<class M>
 	constexpr bool
 	BasicPort<M>::operator== (BasicPort const& other) const
 	{
-		return _index == other._index
+		return _port_number == other._port_number
 			&& &_dir == &other._dir && _dirset == &other._dirset && &_dirclr == &other._dirclr && &_dirtgl == &other._dirtgl
 			&& &_out == &other._out && _outset == &other._outset && &_outclr == &other._outclr && &_outtgl == &other._outtgl
 			&& &_in == &other._in
@@ -196,6 +215,14 @@ template<class M>
 	BasicPort<M>::pin (uint8_t pin_number) const
 	{
 		return Pin (*this, pin_number);
+	}
+
+
+template<class M>
+	constexpr uint8_t
+	BasicPort<M>::port_number() const
+	{
+		return _port_number;
 	}
 
 
@@ -258,9 +285,17 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicPort<M>::pin_configure_as_output (uint8_t pin_number) const
+	BasicPort<M>::configure_as_inputs (typename MCU::PortIntegerType pin_bits) const
 	{
-		_dirset = bitnum<uint8_t> (pin_number);
+		_dirclr = pin_bits;
+	}
+
+
+template<class M>
+	inline void
+	BasicPort<M>::configure_as_outputs (typename MCU::PortIntegerType pin_bits) const
+	{
+		_dirset = pin_bits;
 	}
 
 
@@ -269,6 +304,14 @@ template<class M>
 	BasicPort<M>::pin_configure_as_input (uint8_t pin_number) const
 	{
 		_dirclr = bitnum<uint8_t> (pin_number);
+	}
+
+
+template<class M>
+	inline void
+	BasicPort<M>::pin_configure_as_output (uint8_t pin_number) const
+	{
+		_dirset = bitnum<uint8_t> (pin_number);
 	}
 
 

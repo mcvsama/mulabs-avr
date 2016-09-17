@@ -15,7 +15,10 @@
 #define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_IO_H__INCLUDED
 
 // Mulabs AVR:
+#include <mulabs_avr/devices/xmega_au/basic_pin.h>
 #include <mulabs_avr/devices/xmega_au/basic_pin_set.h>
+#include <mulabs_avr/devices/xmega_au/basic_port.h>
+#include <mulabs_avr/utility/bits.h>
 
 
 namespace mulabs {
@@ -26,7 +29,10 @@ template<class pMCU>
 	class BasicIO
 	{
 	  public:
-		typedef pMCU MCU;
+		typedef pMCU				MCU;
+		typedef BasicPin<MCU>		Pin;
+		typedef BasicPort<MCU>		Port;
+		typedef BasicPinSet<MCU>	PinSet;
 
 	  public:
 		enum class InterruptTrigger: uint8_t
@@ -38,28 +44,116 @@ template<class pMCU>
 		};
 
 	  public:
-#if 0
+		/**
+		 * Configure given pins as inputs.
+		 */
+		static void
+		configure_as_inputs (PinSet pin_set);
+
+		/**
+		 * Configure given pins as inputs.
+		 */
+		template<class ...Pins>
+			static constexpr void
+			configure_as_inputs (Pins ...pins);
+
+		/**
+		 * Return port object by number.
+		 */
+		static constexpr Port
+		port_at (uint8_t port_number);
+
+		/**
+		 * Configure given pins as outputs.
+		 */
+		static constexpr void
+		configure_as_outputs (PinSet pin_set);
+
+		/**
+		 * Configure given pins as outputs.
+		 */
+		template<class ...Pins>
+			static constexpr void
+			configure_as_outputs (Pins ...pins);
+
 		/**
 		 * Recursive function that collects Pins.
 		 */
 		template<class Pin, class ...Pins>
-			constexpr PinSet
-			make_pin_set (Pin pin, Pins ...pins) const
+			static constexpr PinSet
+			make_pin_set (Pin pin, Pins ...pins)
 			{
-				return PinSet (pin.bit() | make_pin_set (pins...).bits());
+				auto new_pins = make_pin_set (pins...).pins();
+				new_pins.set_bit (pin.absolute_pin_number());
+				return PinSet (new_pins);
 			}
 
 		/**
 		 * Recursive stop-condition for make_pin_set().
 		 */
 		template<class Pin>
-			constexpr PinSet
-			make_pin_set (Pin pin) const
+			static constexpr PinSet
+			make_pin_set (Pin pin)
 			{
-				return PinSet (pin.bit());
+				typename MCU::Pins pins { };
+				pins.set_bit (pin.absolute_pin_number());
+				return PinSet (pins);
 			}
-#endif
 	};
+
+
+template<class M>
+	constexpr typename BasicIO<M>::Port
+	BasicIO<M>::port_at (uint8_t port_number)
+	{
+		return MCU::ports_index[port_number];
+	}
+
+
+template<class M>
+	void
+	BasicIO<M>::configure_as_inputs (PinSet pset)
+	{
+		auto sorted_pins = pset.sorted_pins();
+
+		for (size_t i = 0; i < sorted_pins.first_zero_element; ++i)
+		{
+			auto pp = sorted_pins.ports_and_pin_bits[i];
+			port_at (pp.port_number).configure_as_inputs (pp.pin_bits);
+		}
+	}
+
+
+template<class M>
+	template<class ...Pins>
+		constexpr void
+		BasicIO<M>::configure_as_inputs (Pins ...pins)
+		{
+			configure_as_inputs (make_pin_set (pins...));
+		}
+
+
+template<class M>
+	constexpr void
+	BasicIO<M>::configure_as_outputs (PinSet pset)
+	{
+		auto sorted_pins = pset.sorted_pins();
+
+		for (size_t i = 0; i < sorted_pins.first_zero_element; ++i)
+		{
+			auto pp = sorted_pins.ports_and_pin_bits[i];
+			port_at (pp.port_number).configure_as_outputs (pp.pin_bits);
+		}
+	}
+
+
+template<class M>
+	template<class ...Pins>
+		constexpr void
+		BasicIO<M>::configure_as_outputs (Pins ...pins)
+		{
+			configure_as_outputs (make_pin_set (pins...));
+		}
 
 } // namespace xmega_au
 } // namespace avr

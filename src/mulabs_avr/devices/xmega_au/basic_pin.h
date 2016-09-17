@@ -40,16 +40,35 @@ template<class pMCU>
 		operator= (bool logic_value) const;
 
 		/**
-		 * Configure pin as output.
+		 * Return the pin number in the port.
 		 */
-		void
-		configure_as_output() const;
+		constexpr uint8_t
+		pin_number() const;
+
+		/**
+		 * Return pin number for the PinSet object
+		 * (taking into account port number as well).
+		 */
+		constexpr size_t
+		absolute_pin_number() const;
+
+		/**
+		 * Return port.
+		 */
+		constexpr Port
+		port() const;
 
 		/**
 		 * Configure pin as input.
 		 */
 		void
 		configure_as_input() const;
+
+		/**
+		 * Configure pin as output.
+		 */
+		void
+		configure_as_output() const;
 
 		/**
 		 * Set pin level to high.

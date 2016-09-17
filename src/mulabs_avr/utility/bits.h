@@ -14,9 +14,6 @@
 #ifndef MULABS_AVR__UTILITY__BITS_H__INCLUDED
 #define MULABS_AVR__UTILITY__BITS_H__INCLUDED
 
-// AVR:
-#include <util/delay.h>
-
 // Local:
 #include "range.h"
 
@@ -25,7 +22,7 @@ namespace mulabs {
 namespace avr {
 
 template<class T>
-	static constexpr inline T
+	static constexpr T
 	bitnum (uint8_t bit)
 	{
 		return 1U << bit;
@@ -33,7 +30,7 @@ template<class T>
 
 
 template<class T>
-	static constexpr inline T
+	static constexpr T
 	neg_bitnum (uint8_t bit)
 	{
 		return ~(1U << bit);
@@ -41,7 +38,7 @@ template<class T>
 
 
 template<class R>
-	static constexpr inline void
+	static constexpr void
 	set_bit (R volatile& reg, uint8_t bit)
 	{
 		reg |= bitnum<R> (bit);
@@ -49,7 +46,7 @@ template<class R>
 
 
 template<class R>
-	static constexpr inline void
+	static constexpr void
 	clear_bit (R volatile& reg, uint8_t bit)
 	{
 		reg &= neg_bitnum<R> (bit);
@@ -57,7 +54,7 @@ template<class R>
 
 
 template<class R>
-	static constexpr inline void
+	static constexpr void
 	set_bit_value (R volatile& reg, uint8_t bit, bool value)
 	{
 		value ? set_bit (reg, bit) : clear_bit (reg, bit);
@@ -65,14 +62,14 @@ template<class R>
 
 
 template<class R>
-	static constexpr inline bool
+	static constexpr bool
 	get_bit (R const& reg, uint8_t bit)
 	{
 		return reg & bitnum<R> (bit);
 	}
 
 
-inline constexpr float
+constexpr float
 renormalize (float value, float a1, float b1, float a2, float b2) noexcept
 {
 	return b1 == a1
@@ -81,7 +78,7 @@ renormalize (float value, float a1, float b1, float a2, float b2) noexcept
 }
 
 
-inline constexpr float
+constexpr float
 renormalize (float value, Range<float> range1, Range<float> range2) noexcept
 {
 	return renormalize (value, range1.min(), range1.max(), range2.min(), range2.max());

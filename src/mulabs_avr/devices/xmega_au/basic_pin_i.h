@@ -31,10 +31,35 @@ template<class M>
 
 
 template<class M>
-	inline void
-	BasicPin<M>::configure_as_output() const
+	inline BasicPin<M> const&
+	BasicPin<M>::operator= (bool logic_value) const
 	{
-		_port.pin_configure_as_output (_pin_number);
+		_port.pin_set (_pin_number, logic_value);
+		return *this;
+	}
+
+
+template<class M>
+	constexpr uint8_t
+	BasicPin<M>::pin_number() const
+	{
+		return _pin_number;
+	}
+
+
+template<class M>
+	constexpr size_t
+	BasicPin<M>::absolute_pin_number() const
+	{
+		return _port.port_number() * 8 * sizeof (typename MCU::PortIntegerType) + pin_number();
+	}
+
+
+template<class M>
+	constexpr typename BasicPin<M>::Port
+	BasicPin<M>::port() const
+	{
+		return _port;
 	}
 
 
@@ -47,11 +72,10 @@ template<class M>
 
 
 template<class M>
-	inline BasicPin<M> const&
-	BasicPin<M>::operator= (bool logic_value) const
+	inline void
+	BasicPin<M>::configure_as_output() const
 	{
-		_port.pin_set (_pin_number, logic_value);
-		return *this;
+		_port.pin_configure_as_output (_pin_number);
 	}
 
 
