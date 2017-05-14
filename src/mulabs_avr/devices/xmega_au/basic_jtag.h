@@ -14,9 +14,6 @@
 #ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_JTAG_H__INCLUDED
 #define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_JTAG_H__INCLUDED
 
-// Mulabs AVR:
-#include <mulabs_avr/devices/xmega_au/basic_pin_set.h>
-
 
 namespace mulabs {
 namespace avr {
@@ -26,7 +23,7 @@ template<class pMCU>
 	class BasicJTAG
 	{
 	  public:
-		typedef pMCU MCU;
+		using MCU = pMCU;
 
 	  public:
 		/**

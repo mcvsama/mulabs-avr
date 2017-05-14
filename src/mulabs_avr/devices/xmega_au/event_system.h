@@ -166,63 +166,63 @@ class EventSystem
 
 	/**
 	 * \param	channel
-	 * 			0, 1, 2 or 3.
+	 *			0, 1, 2 or 3.
 	 */
 	static constexpr EventSource
 	event_source_for_adca_channel (uint8_t channel);
 
 	/**
 	 * \param	channel
-	 * 			0, 1, 2 or 3.
+	 *			0, 1, 2 or 3.
 	 */
 	static constexpr EventSource
 	event_source_for_adcb_channel (uint8_t channel);
 
 	/**
 	 * \param	pin number
-	 * 			0…7
+	 *			0…7
 	 */
 	static constexpr EventSource
 	event_source_for_port_a_pin (uint8_t pin_number);
 
 	/**
 	 * \param	pin number
-	 * 			0…7
+	 *			0…7
 	 */
 	static constexpr EventSource
 	event_source_for_port_b_pin (uint8_t pin_number);
 
 	/**
 	 * \param	pin number
-	 * 			0…7
+	 *			0…7
 	 */
 	static constexpr EventSource
 	event_source_for_port_c_pin (uint8_t pin_number);
 
 	/**
 	 * \param	pin number
-	 * 			0…7
+	 *			0…7
 	 */
 	static constexpr EventSource
 	event_source_for_port_d_pin (uint8_t pin_number);
 
 	/**
-	 * \param	pin number
-	 * 			0…7
+	 *\param	pin number
+	 *			0…7
 	 */
 	static constexpr EventSource
 	event_source_for_port_e_pin (uint8_t pin_number);
 
 	/**
 	 * \param	pin number
-	 * 			0…7
+	 *			0…7
 	 */
 	static constexpr EventSource
 	event_source_for_port_f_pin (uint8_t pin_number);
 
 	/**
 	 * \param	prescaler 2^power
-	 * 			0…15, gives CLK_PER divided by 2^n
+	 *			0…15, gives CLK_PER divided by 2^n
 	 */
 	static constexpr EventSource
 	event_source_for_prescaler (uint8_t power);

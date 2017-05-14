@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_PINSET_H__INCLUDED
-#define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_PINSET_H__INCLUDED
+#ifndef MULABS_AVR__DEVICES__COMMON__COMMON_BASIC_PINSET_H__INCLUDED
+#define MULABS_AVR__DEVICES__COMMON__COMMON_BASIC_PINSET_H__INCLUDED
 
 // Mulabs AVR:
 #include <mulabs_avr/utility/array.h>
@@ -20,7 +20,6 @@
 
 namespace mulabs {
 namespace avr {
-namespace xmega_au {
 
 /**
  * Stores list of all pins as bits set to 1 in an array
@@ -28,11 +27,11 @@ namespace xmega_au {
  * represents one pin.
  */
 template<class pMCU>
-	class BasicPinSet
+	class CommonBasicPinSet
 	{
 	  public:
-		typedef pMCU													MCU;
-		typedef Array<typename MCU::PortIntegerType, MCU::kNumPorts>	AllPins;
+		using MCU		= pMCU;
+		using AllPins	= Array<typename MCU::PortIntegerType, MCU::kNumPorts>;
 
 		struct PortAndPinBits
 		{
@@ -49,7 +48,7 @@ template<class pMCU>
 	  public:
 		// Ctor
 		constexpr explicit
-		BasicPinSet (AllPins pins);
+		CommonBasicPinSet (AllPins pins);
 
 		/**
 		 * Return array of ports/pins.
@@ -152,28 +151,27 @@ template<class pMCU>
 
 template<class M>
 	constexpr
-	BasicPinSet<M>::BasicPinSet (AllPins pins):
+	CommonBasicPinSet<M>::CommonBasicPinSet (AllPins pins):
 		_all_pins (pins)
 	{
 	}
 
 
 template<class M>
-	constexpr typename BasicPinSet<M>::AllPins
-	BasicPinSet<M>::pins() const
+	constexpr typename CommonBasicPinSet<M>::AllPins
+	CommonBasicPinSet<M>::pins() const
 	{
 		return _all_pins;
 	}
 
 
 template<class M>
-	constexpr typename BasicPinSet<M>::SortedPins
-	BasicPinSet<M>::sorted_pins() const
+	constexpr typename CommonBasicPinSet<M>::SortedPins
+	CommonBasicPinSet<M>::sorted_pins() const
 	{
 		return sorted_pins (make_port_and_pin_bits (pins()));
 	}
 
-} // namespace xmega_au
 } // namespace avr
 } // namespace mulabs
 

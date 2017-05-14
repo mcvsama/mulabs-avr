@@ -14,6 +14,8 @@
 #ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_PIN_H__INCLUDED
 #define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_PIN_H__INCLUDED
 
+#include <mulabs_avr/devices/common/common_basic_pin.h>
+
 
 namespace mulabs {
 namespace avr {
@@ -24,10 +26,10 @@ template<class pMCU>
 
 
 template<class pMCU>
-	class BasicPin
+	class BasicPin: public CommonBasicPin<pMCU>
 	{
-		typedef pMCU			MCU;
-		typedef BasicPort<MCU>	Port; // TODO const Port, const Pin, etc
+		using MCU	= pMCU;
+		using Port	= typename MCU::Port;
 
 		enum class Configuration: uint8_t
 		{
@@ -51,58 +53,8 @@ template<class pMCU>
 		};
 
 	  public:
-		constexpr
-		BasicPin (Port port, uint8_t pin_number);
-
-		/**
-		 * Set pin level to logic_value. True means high, false mans low.
-		 */
-		BasicPin const&
-		operator= (bool logic_value) const;
-
-		/**
-		 * Return the pin number in the port.
-		 */
-		constexpr uint8_t
-		pin_number() const;
-
-		/**
-		 * Return pin number for the PinSet object
-		 * (taking into account port number as well).
-		 */
-		constexpr size_t
-		absolute_pin_number() const;
-
-		/**
-		 * Return port.
-		 */
-		constexpr Port
-		port() const;
-
-		/**
-		 * Read pin value.
-		 */
-		bool
-		get() const;
-
-		/**
-		 * Wait in loop until pin is in AwaitedState.
-		 */
-		template<bool AwaitedState>
-			void
-			wait_for() const;
-
-		/**
-		 * Configure pin as input.
-		 */
-		void
-		configure_as_input() const;
-
-		/**
-		 * Configure pin as output.
-		 */
-		void
-		configure_as_output() const;
+		using CommonBasicPin<MCU>::CommonBasicPin;
+		using CommonBasicPin<MCU>::operator=;
 
 		/**
 		 * Return true if slew-rate limit is enabled.
@@ -153,30 +105,6 @@ template<class pMCU>
 		set_sense_configuration (SenseConfiguration) const;
 
 		/**
-		 * Set pin level to high.
-		 */
-		void
-		set_high() const;
-
-		/**
-		 * Set pin level to low.
-		 */
-		void
-		set_low() const;
-
-		/**
-		 * Toggle pin level.
-		 */
-		void
-		toggle() const;
-
-		/**
-		 * Toggle two times.
-		 */
-		void
-		signal() const;
-
-		/**
 		 * Enable this pin to be source for interrupt 0.
 		 */
 		// TODO int0 and int1 source pin selection mask (INT0MASK, INT1MASK)
@@ -187,17 +115,83 @@ template<class pMCU>
 		 */
 		constexpr typename MCU::Register8
 		pinctrl_register() const;
-
-	  private:
-		Port	_port;
-		uint8_t	_pin_number;
 	};
+
+
+template<class M>
+	inline bool
+	BasicPin<M>::slew_rate_limit() const
+	{
+		return get_bit (pinctrl_register().read(), 7);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_slew_rate_limit (bool enabled) const
+	{
+		set_bit_value (pinctrl_register().ref(), 7, enabled);
+	}
+
+
+template<class M>
+	inline bool
+	BasicPin<M>::inverted_io() const
+	{
+		return get_bit (pinctrl_register().read(), 6);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_inverted_io (bool enabled) const
+	{
+		set_bit_value (pinctrl_register().ref(), 6, enabled);
+	}
+
+
+template<class M>
+	inline typename BasicPin<M>::Configuration
+	BasicPin<M>::configuration() const
+	{
+		return static_cast<Configuration> (pinctrl_register().read() & 0b00'111'000);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_configuration (Configuration new_configuration) const
+	{
+		pinctrl_register() = (pinctrl_register().read() & 0b11'000'111) | new_configuration;
+	}
+
+
+template<class M>
+	inline typename BasicPin<M>::SenseConfiguration
+	BasicPin<M>::sense_configuration() const
+	{
+		return static_cast<Configuration> (pinctrl_register().read() & 0b00'000'111);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_sense_configuration (SenseConfiguration new_sense_configuration) const
+	{
+		pinctrl_register() = (pinctrl_register().read() & 0b11'111'000) | new_sense_configuration;
+	}
+
+
+template<class M>
+	constexpr typename BasicPin<M>::MCU::Register8
+	BasicPin<M>::pinctrl_register() const
+	{
+		return CommonBasicPin<M>::_port.pinctrl_register (CommonBasicPin<M>::pin_number());
+	}
 
 } // namespace xmega_au
 } // namespace avr
 } // namespace mulabs
-
-#include "basic_pin_i.h"
 
 #endif
 

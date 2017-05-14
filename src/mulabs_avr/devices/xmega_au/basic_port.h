@@ -18,18 +18,6 @@
 #include <mulabs_avr/utility/bits.h>
 
 
-template<bool Expression>
-	class constexpr_assert
-	{
-	  public:
-		explicit constexpr
-		constexpr_assert (const char* str)
-		{
-			static_assert (Expression, "constexpr failed");
-		}
-	};
-
-
 namespace mulabs {
 namespace avr {
 namespace xmega_au {
@@ -42,9 +30,9 @@ template<class pMCU>
 	class BasicPort
 	{
 	  public:
-		typedef pMCU					MCU;
-		typedef typename MCU::Register8	Register8;
-		typedef BasicPin<MCU>			Pin;
+		using MCU		= pMCU;
+		using Register8	= typename MCU::Register8;
+		using Pin		= typename MCU::Pin;
 
 	  public:
 		// Ctor:

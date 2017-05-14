@@ -23,11 +23,11 @@
 #include <mulabs_avr/avr/avr_fixes.h>
 #include <mulabs_avr/avr/basic_register8.h>
 #include <mulabs_avr/avr/basic_register16.h>
+#include <mulabs_avr/devices/common/common_basic_io.h>
+#include <mulabs_avr/devices/common/common_basic_pin_set.h>
 #include <mulabs_avr/devices/xmega_au/basic_clock.h>
-#include <mulabs_avr/devices/xmega_au/basic_io.h>
 #include <mulabs_avr/devices/xmega_au/basic_jtag.h>
 #include <mulabs_avr/devices/xmega_au/basic_pin.h>
-#include <mulabs_avr/devices/xmega_au/basic_pin_set.h>
 #include <mulabs_avr/devices/xmega_au/basic_port.h>
 #include <mulabs_avr/devices/xmega_au/event_system.h>
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
@@ -44,27 +44,27 @@ class ATXMega128A1U
   public:
 	static constexpr uint8_t kNumPorts	= 11;
 
-	typedef ATXMega128A1U						MCU;
-	typedef BasicRegister8						Register8;
-	typedef BasicRegister16						Register16;
-	typedef uint8_t								PortIntegerType;
+	using MCU				= ATXMega128A1U;
+	using Register8			= BasicRegister8;
+	using Register16		= BasicRegister16;
+	using PortIntegerType	= uint8_t;
 
-	typedef xmega_au::BasicClock<MCU>			Clock;
-	typedef xmega_au::BasicIO<MCU>				IO;
-	typedef xmega_au::BasicJTAG<MCU>			JTAG;
-	typedef xmega_au::BasicPin<MCU>				Pin;
-	typedef xmega_au::BasicPort<MCU>			Port;
-	typedef xmega_au::BasicPinSet<MCU>			PinSet;
-	typedef xmega_au::EventSystem				EventSystem;
-	typedef xmega_au::InterruptSystem			InterruptSystem;
+	using Clock				= xmega_au::BasicClock<MCU>;
+	using IO				= CommonBasicIO<MCU>;
+	using JTAG				= xmega_au::BasicJTAG<MCU>;
+	using Pin				= xmega_au::BasicPin<MCU>;
+	using Port				= xmega_au::BasicPort<MCU>;
+	using PinSet			= CommonBasicPinSet<MCU>;
+	using EventSystem		= xmega_au::EventSystem;
+	using InterruptSystem	= xmega_au::InterruptSystem;
 
-	static_assert (is_literal_type<Register8>::value, "Register8 must be a literal type");
-	static_assert (is_literal_type<Register16>::value, "Register16 must be a literal type");
-	static_assert (is_literal_type<Clock>::value, "Clock must be a literal type");
-	static_assert (is_literal_type<IO>::value, "IO must be a literal type");
-	static_assert (is_literal_type<Pin>::value, "Pin must be a literal type");
-	static_assert (is_literal_type<PinSet>::value, "PinSet must be a literal type");
-	static_assert (is_literal_type<Port>::value, "Port must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::Register8>::value, "Register8 must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::Register16>::value, "Register16 must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::Clock>::value, "Clock must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::IO>::value, "IO must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::Pin>::value, "Pin must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::PinSet>::value, "PinSet must be a literal type");
+	static_assert (is_literal_type<ATXMega128A1U::Port>::value, "Port must be a literal type");
 
 #define MULABS_DECLARE_PORT(member_name, avr_port_prefix, port_number) \
 	static constexpr Port member_name { \
