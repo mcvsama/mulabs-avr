@@ -27,5 +27,16 @@
 // option is to use preprocessor for getting addresses of registers.
 #define MULABS_REG(avr_register) reinterpret_cast<size_t> (&avr_register)
 
+
+// Missing declarations:
+#ifdef _SFR_MEM8
+# ifndef PORTCFG_EBIOUT
+#  define PORTCFG_EBIOUT	_SFR_MEM8(0x00B5)
+# endif
+# ifndef PORTCFG_EVCTRL
+#  define PORTCFG_EVCTRL	_SFR_MEM8(0x00B6)
+# endif
+#endif
+
 #endif
 
