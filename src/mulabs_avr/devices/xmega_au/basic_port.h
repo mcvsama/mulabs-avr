@@ -14,7 +14,20 @@
 #ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_PORT_H__INCLUDED
 #define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_PORT_H__INCLUDED
 
+#include <mulabs_avr/devices/xmega_au/interrupt_system.h>
 #include <mulabs_avr/utility/bits.h>
+
+
+template<bool Expression>
+	class constexpr_assert
+	{
+	  public:
+		explicit constexpr
+		constexpr_assert (const char* str)
+		{
+			static_assert (Expression, "constexpr failed");
+		}
+	};
 
 
 namespace mulabs {
@@ -57,10 +70,21 @@ template<class pMCU>
 		pin (uint8_t pin_number) const;
 
 		/**
-		 * Return this port's number.
+		 * Return this port's number (A is 0, B is 1, etc).
 		 */
 		constexpr uint8_t
 		port_number() const;
+
+		/**
+		 * Read byte from the port.
+		 */
+		uint8_t
+		get() const;
+
+		/**
+		 * Alias for get().
+		 */
+		operator uint8_t() const;
 
 		/**
 		 * Write byte to all pins on port at once.
@@ -93,17 +117,6 @@ template<class pMCU>
 		toggle (uint8_t byte) const;
 
 		/**
-		 * Read byte from the port.
-		 */
-		uint8_t
-		get() const;
-
-		/**
-		 * Alias for get().
-		 */
-		operator uint8_t() const;
-
-		/**
 		 * Configure pins denoted by set bits as inputs.
 		 */
 		void
@@ -126,6 +139,12 @@ template<class pMCU>
 		 */
 		void
 		pin_configure_as_output (uint8_t pin_number) const;
+
+		/**
+		 * Get individual pin level.
+		 */
+		bool
+		pin_get (uint8_t pin_number) const;
 
 		/**
 		 * Set individual pin to given logic value.
@@ -152,10 +171,67 @@ template<class pMCU>
 		pin_toggle (uint8_t pin_number) const;
 
 		/**
-		 * Get individual pin level.
+		 * Configure interrupt 0 (INT0).
 		 */
-		bool
-		pin_get (uint8_t pin_number) const;
+		void
+		configure_interrupt_0 (InterruptSystem::Config) const;
+
+		/**
+		 * Select source pin for interrupt 0 (INT0).
+		 * The sense configuration is set with Pin::set_sense_configuration().
+		 */
+		template<class ...Pins>
+			void
+			select_pins_for_interrupt_0 (Pins const ...pins) const;
+
+		/**
+		 * Configure interrupt 1 (INT1).
+		 */
+		void
+		configure_interrupt_1 (InterruptSystem::Config) const;
+
+		/**
+		 * Select source pin for interrupt 1 (INT1).
+		 * The sense configuration is set with Pin::set_sense_configuration().
+		 */
+		template<class ...Pins>
+			void
+			select_pins_for_interrupt_1 (Pins const ...pins) const;
+
+		// TODO pins remapping REMAP
+		// TODO const używaj wszędzie constów
+
+		constexpr typename MCU::Register8
+		pinctrl_register (uint8_t pin_number) const;
+
+	  private:
+		/**
+		 * Recursive function that collects Pins belonging to this port only.
+		 */
+		template<class Pin, class ...Pins>
+			// TODO zamiast MCU::PortIntegerType zrób PortPinSet czy PinSet8
+			// TODO PinSet i PortPinSet powinny zwracać obiekty Pin na żądanie
+			constexpr typename MCU::PortIntegerType
+			make_pin_set (Pin const pin, Pins const ...pins) const
+			{
+				// TODO: if (constexpr (pin.port() != *this))
+				// TODO: 	static_assert (false, "wrong Pin passed to the port");
+
+				return bitnum<typename MCU::PortIntegerType> (pin.pin_number()) | make_pin_set (pins...);
+			}
+
+		/**
+		 * Recursive stop-condition for make_pin_set().
+		 */
+		template<class Pin>
+			constexpr typename MCU::PortIntegerType
+			make_pin_set (Pin const pin) const
+			{
+				// TODO: if (constexpr (pin.port() != *this))
+				// TODO: 	static_assert (false, "wrong Pin passed to the port");
+
+				return bitnum<typename MCU::PortIntegerType> (pin.pin_number());
+			}
 
 	  private:
 		uint8_t		_port_number;
@@ -184,8 +260,7 @@ template<class M>
 		_intctrl (intctrl), _int0mask (int0mask), _int1mask (int1mask), _intflags (intflags),
 		_pin0ctrl (pin0ctrl), _pin1ctrl (pin1ctrl), _pin2ctrl (pin2ctrl), _pin3ctrl (pin3ctrl),
 		_pin4ctrl (pin4ctrl), _pin5ctrl (pin5ctrl), _pin6ctrl (pin6ctrl), _pin7ctrl (pin7ctrl)
-	{
-	}
+	{ }
 
 
 template<class M>
@@ -193,8 +268,8 @@ template<class M>
 	BasicPort<M>::operator== (BasicPort const& other) const
 	{
 		return _port_number == other._port_number
-			&& &_dir == &other._dir && _dirset == &other._dirset && &_dirclr == &other._dirclr && &_dirtgl == &other._dirtgl
-			&& &_out == &other._out && _outset == &other._outset && &_outclr == &other._outclr && &_outtgl == &other._outtgl
+			&& &_dir == &other._dir && &_dirset == &other._dirset && &_dirclr == &other._dirclr && &_dirtgl == &other._dirtgl
+			&& &_out == &other._out && &_outset == &other._outset && &_outclr == &other._outclr && &_outtgl == &other._outtgl
 			&& &_in == &other._in
 			&& &_intctrl == &other._intctrl && &_int0mask == &other._int0mask && &_int1mask == &other._int1mask && &_intflags == &other._intflags
 			&& &_pin0ctrl == &other._pin0ctrl && &_pin1ctrl == &other._pin1ctrl && &_pin2ctrl == &other._pin2ctrl && &_pin3ctrl == &other._pin3ctrl
@@ -223,6 +298,22 @@ template<class M>
 	BasicPort<M>::port_number() const
 	{
 		return _port_number;
+	}
+
+
+template<class M>
+	inline uint8_t
+	BasicPort<M>::get() const
+	{
+		return _in;
+	}
+
+
+template<class M>
+	inline
+	BasicPort<M>::operator uint8_t() const
+	{
+		return get();
 	}
 
 
@@ -268,22 +359,6 @@ template<class M>
 
 
 template<class M>
-	inline uint8_t
-	BasicPort<M>::get() const
-	{
-		return _in;
-	}
-
-
-template<class M>
-	inline
-	BasicPort<M>::operator uint8_t() const
-	{
-		return get();
-	}
-
-
-template<class M>
 	inline void
 	BasicPort<M>::configure_as_inputs (typename MCU::PortIntegerType pin_bits) const
 	{
@@ -312,6 +387,14 @@ template<class M>
 	BasicPort<M>::pin_configure_as_output (uint8_t pin_number) const
 	{
 		_dirset = bitnum<uint8_t> (pin_number);
+	}
+
+
+template<class M>
+	inline bool
+	BasicPort<M>::pin_get (uint8_t pin_number) const
+	{
+		return _in.read() & bitnum<uint8_t> (pin_number);
 	}
 
 
@@ -351,10 +434,70 @@ template<class M>
 
 
 template<class M>
-	inline bool
-	BasicPort<M>::pin_get (uint8_t pin_number) const
+	inline void
+	BasicPort<M>::configure_interrupt_0 (InterruptSystem::Config config) const
 	{
-		return _in.read() & bitnum<uint8_t> (pin_number);
+		_intctrl = (_intctrl & ~0b11) | static_cast<uint8_t> (config);
+	}
+
+
+template<class M>
+	template<class ...Pins>
+		inline void
+		BasicPort<M>::select_pins_for_interrupt_0 (Pins const ...pins) const
+		{
+			_int0mask = make_pin_set (pins...);
+		}
+
+
+template<class M>
+	inline void
+	BasicPort<M>::configure_interrupt_1 (InterruptSystem::Config config) const
+	{
+		_intctrl = (_intctrl & ~0b1100) | (static_cast<uint8_t> (config) << 2);
+	}
+
+
+template<class M>
+	template<class ...Pins>
+		inline void
+		BasicPort<M>::select_pins_for_interrupt_1 (Pins const ...pins) const
+		{
+			_int1mask = make_pin_set (pins...);
+		}
+
+
+template<class M>
+	constexpr typename BasicPort<M>::MCU::Register8
+	BasicPort<M>::pinctrl_register (uint8_t pin_number) const
+	{
+		switch (pin_number)
+		{
+			case 0:
+				return _pin0ctrl;
+
+			case 1:
+				return _pin1ctrl;
+
+			case 2:
+				return _pin2ctrl;
+
+			case 3:
+				return _pin3ctrl;
+
+			case 4:
+				return _pin4ctrl;
+
+			case 5:
+				return _pin5ctrl;
+
+			case 6:
+				return _pin6ctrl;
+
+			case 7:
+			default:
+				return _pin7ctrl;
+		}
 	}
 
 } // namespace xmega_au

@@ -56,6 +56,24 @@ template<class M>
 
 
 template<class M>
+	inline bool
+	BasicPin<M>::get() const
+	{
+		return _port.pin_get (_pin_number);
+	}
+
+
+template<class M>
+	template<bool State>
+		inline void
+		BasicPin<M>::wait_for() const
+		{
+			while (get() != State)
+				continue;
+		}
+
+
+template<class M>
 	constexpr typename BasicPin<M>::Port
 	BasicPin<M>::port() const
 	{
@@ -80,6 +98,70 @@ template<class M>
 
 
 template<class M>
+	inline bool
+	BasicPin<M>::slew_rate_limit() const
+	{
+		return get_bit (pinctrl_register().read(), 7);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_slew_rate_limit (bool enabled) const
+	{
+		set_bit_value (pinctrl_register().ref(), 7, enabled);
+	}
+
+
+template<class M>
+	inline bool
+	BasicPin<M>::inverted_io() const
+	{
+		return get_bit (pinctrl_register().read(), 6);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_inverted_io (bool enabled) const
+	{
+		set_bit_value (pinctrl_register().ref(), 6, enabled);
+	}
+
+
+template<class M>
+	inline typename BasicPin<M>::Configuration
+	BasicPin<M>::configuration() const
+	{
+		return static_cast<Configuration> (pinctrl_register().read() & 0b00'111'000);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_configuration (Configuration new_configuration) const
+	{
+		pinctrl_register() = (pinctrl_register().read() & 0b11'000'111) | new_configuration;
+	}
+
+
+template<class M>
+	inline typename BasicPin<M>::SenseConfiguration
+	BasicPin<M>::sense_configuration() const
+	{
+		return static_cast<Configuration> (pinctrl_register().read() & 0b00'000'111);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::set_sense_configuration (SenseConfiguration new_sense_configuration) const
+	{
+		pinctrl_register() = (pinctrl_register().read() & 0b11'111'000) | new_sense_configuration;
+	}
+
+
+template<class M>
 	inline void
 	BasicPin<M>::set_high() const
 	{
@@ -100,6 +182,23 @@ template<class M>
 	BasicPin<M>::toggle() const
 	{
 		_port.pin_toggle (_pin_number);
+	}
+
+
+template<class M>
+	inline void
+	BasicPin<M>::signal() const
+	{
+		toggle();
+		toggle();
+	}
+
+
+template<class M>
+	constexpr typename BasicPin<M>::MCU::Register8
+	BasicPin<M>::pinctrl_register() const
+	{
+		return _port.pinctrl_register (_pin_number);
 	}
 
 } // namespace xmega_au

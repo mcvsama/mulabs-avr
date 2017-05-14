@@ -35,15 +35,6 @@ template<class pMCU>
 		typedef BasicPinSet<MCU>	PinSet;
 
 	  public:
-		enum class InterruptTrigger: uint8_t
-		{
-			LowLevel		= 0b00,
-			AnyChange		= 0b01,
-			FallingEdge		= 0b10,
-			RisingEdge		= 0b11,
-		};
-
-	  public:
 		/**
 		 * Configure given pins as inputs.
 		 */
@@ -81,7 +72,7 @@ template<class pMCU>
 		 */
 		template<class Pin, class ...Pins>
 			static constexpr PinSet
-			make_pin_set (Pin pin, Pins ...pins)
+			make_pin_set (Pin const pin, Pins const ...pins)
 			{
 				auto new_pins = make_pin_set (pins...).pins();
 				new_pins.set_bit (pin.absolute_pin_number());
@@ -93,12 +84,17 @@ template<class pMCU>
 		 */
 		template<class Pin>
 			static constexpr PinSet
-			make_pin_set (Pin pin)
+			make_pin_set (Pin const pin)
 			{
 				typename MCU::Pins pins { };
 				pins.set_bit (pin.absolute_pin_number());
 				return PinSet (pins);
 			}
+
+		// TODO virtual port mapping VPCTRLA VPCTRLB
+		// TODO CLKEVOUT
+		// TODO EBIOUT
+		// TODO EVCTRL
 	};
 
 
@@ -114,7 +110,7 @@ template<class M>
 	void
 	BasicIO<M>::configure_as_inputs (PinSet pset)
 	{
-		auto sorted_pins = pset.sorted_pins();
+		auto const sorted_pins = pset.sorted_pins();
 
 		for (size_t i = 0; i < sorted_pins.first_zero_element; ++i)
 		{
@@ -137,7 +133,7 @@ template<class M>
 	constexpr void
 	BasicIO<M>::configure_as_outputs (PinSet pset)
 	{
-		auto sorted_pins = pset.sorted_pins();
+		auto const sorted_pins = pset.sorted_pins();
 
 		for (size_t i = 0; i < sorted_pins.first_zero_element; ++i)
 		{

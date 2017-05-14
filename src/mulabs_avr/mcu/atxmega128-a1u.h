@@ -25,9 +25,12 @@
 #include <mulabs_avr/avr/basic_register16.h>
 #include <mulabs_avr/devices/xmega_au/basic_clock.h>
 #include <mulabs_avr/devices/xmega_au/basic_io.h>
+#include <mulabs_avr/devices/xmega_au/basic_jtag.h>
 #include <mulabs_avr/devices/xmega_au/basic_pin.h>
 #include <mulabs_avr/devices/xmega_au/basic_pin_set.h>
 #include <mulabs_avr/devices/xmega_au/basic_port.h>
+#include <mulabs_avr/devices/xmega_au/event_system.h>
+#include <mulabs_avr/devices/xmega_au/interrupt_system.h>
 #include <mulabs_avr/utility/array.h>
 #include <mulabs_avr/utility/type_traits.h>
 #include <mulabs_avr/mcu/atxmega128-a1u-ports.h>
@@ -45,13 +48,15 @@ class ATXMega128A1U
 	typedef BasicRegister8						Register8;
 	typedef BasicRegister16						Register16;
 	typedef uint8_t								PortIntegerType;
-	typedef Array<PortIntegerType, kNumPorts>	Pins;
 
 	typedef xmega_au::BasicClock<MCU>			Clock;
 	typedef xmega_au::BasicIO<MCU>				IO;
+	typedef xmega_au::BasicJTAG<MCU>			JTAG;
 	typedef xmega_au::BasicPin<MCU>				Pin;
 	typedef xmega_au::BasicPort<MCU>			Port;
 	typedef xmega_au::BasicPinSet<MCU>			PinSet;
+	typedef xmega_au::EventSystem				EventSystem;
+	typedef xmega_au::InterruptSystem			InterruptSystem;
 
 	static_assert (is_literal_type<Register8>::value, "Register8 must be a literal type");
 	static_assert (is_literal_type<Register16>::value, "Register16 must be a literal type");
@@ -60,7 +65,6 @@ class ATXMega128A1U
 	static_assert (is_literal_type<Pin>::value, "Pin must be a literal type");
 	static_assert (is_literal_type<PinSet>::value, "PinSet must be a literal type");
 	static_assert (is_literal_type<Port>::value, "Port must be a literal type");
-	static_assert (is_literal_type<Pins>::value, "Pins must be a literal type");
 
 #define MULABS_DECLARE_PORT(member_name, avr_port_prefix, port_number) \
 	static constexpr Port member_name { \

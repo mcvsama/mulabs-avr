@@ -23,16 +23,16 @@ namespace avr {
 namespace xmega_au {
 
 /**
- * Stores list of pins as bits set to 1 in an array
- * of all ports. Each ports is 8-bit integer, each bit
+ * Stores list of all pins as bits set to 1 in an array
+ * of all ports. Each port is 8-bit integer, each bit
  * represents one pin.
  */
 template<class pMCU>
 	class BasicPinSet
 	{
 	  public:
-		typedef pMCU				MCU;
-		typedef typename MCU::Pins	Pins;
+		typedef pMCU													MCU;
+		typedef Array<typename MCU::PortIntegerType, MCU::kNumPorts>	AllPins;
 
 		struct PortAndPinBits
 		{
@@ -42,21 +42,21 @@ template<class pMCU>
 
 		struct SortedPins
 		{
-			Array<PortAndPinBits, Pins::size()>	ports_and_pin_bits;
-			size_t								first_zero_element;
+			Array<PortAndPinBits, AllPins::size()>	ports_and_pin_bits;
+			size_t									first_zero_element;
 		};
 
 	  public:
 		// Ctor
 		constexpr explicit
-		BasicPinSet (Pins pins);
+		BasicPinSet (AllPins pins);
 
 		/**
 		 * Return array of ports/pins.
 		 * If a bit is set to 1, then pin is considered existing
 		 * in the list.
 		 */
-		constexpr Pins
+		constexpr AllPins
 		pins() const;
 
 		/**
@@ -122,7 +122,7 @@ template<class pMCU>
 		 */
 		template<size_t N>
 			static constexpr Array<PortAndPinBits, N>
-			make_port_and_pin_bits_helper (Pins pins, Array<PortAndPinBits, N> partial_result, size_t index)
+			make_port_and_pin_bits_helper (AllPins pins, Array<PortAndPinBits, N> partial_result, size_t index)
 			{
 				if (index < N)
 				{
@@ -137,32 +137,32 @@ template<class pMCU>
 		 * Create array of PortAndPinBits from simple array of ints.
 		 *
 		 * \param	index
-		 * 			Start index.
+		 *			Start index.
 		 */
-		static constexpr Array<PortAndPinBits, Pins::size()>
-		make_port_and_pin_bits (Pins pins)
+		static constexpr Array<PortAndPinBits, AllPins::size()>
+		make_port_and_pin_bits (AllPins pins)
 		{
-			return make_port_and_pin_bits_helper (pins, Array<PortAndPinBits, Pins::size()>(), 0);
+			return make_port_and_pin_bits_helper (pins, Array<PortAndPinBits, AllPins::size()>(), 0);
 		}
 
 	  private:
-		Pins _pins;
+		AllPins _all_pins;
 	};
 
 
 template<class M>
 	constexpr
-	BasicPinSet<M>::BasicPinSet (Pins pins):
-		_pins (pins)
+	BasicPinSet<M>::BasicPinSet (AllPins pins):
+		_all_pins (pins)
 	{
 	}
 
 
 template<class M>
-	constexpr typename BasicPinSet<M>::Pins
+	constexpr typename BasicPinSet<M>::AllPins
 	BasicPinSet<M>::pins() const
 	{
-		return _pins;
+		return _all_pins;
 	}
 
 

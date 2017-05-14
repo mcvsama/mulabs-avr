@@ -38,7 +38,7 @@ static constexpr size_t kPORTA_PIN4CTRL	= 0x0614;
 static constexpr size_t kPORTA_PIN5CTRL	= 0x0615;
 static constexpr size_t kPORTA_PIN6CTRL	= 0x0616;
 static constexpr size_t kPORTA_PIN7CTRL	= 0x0617;
-;
+
 static constexpr size_t kPORTB_DIR		= 0x0620;
 static constexpr size_t kPORTB_DIRSET	= 0x0621;
 static constexpr size_t kPORTB_DIRCLR	= 0x0622;
@@ -60,7 +60,7 @@ static constexpr size_t kPORTB_PIN4CTRL	= 0x0634;
 static constexpr size_t kPORTB_PIN5CTRL	= 0x0635;
 static constexpr size_t kPORTB_PIN6CTRL	= 0x0636;
 static constexpr size_t kPORTB_PIN7CTRL	= 0x0637;
-;
+
 static constexpr size_t kPORTC_DIR		= 0x0640;
 static constexpr size_t kPORTC_DIRSET	= 0x0641;
 static constexpr size_t kPORTC_DIRCLR	= 0x0642;
@@ -82,7 +82,7 @@ static constexpr size_t kPORTC_PIN4CTRL	= 0x0654;
 static constexpr size_t kPORTC_PIN5CTRL	= 0x0655;
 static constexpr size_t kPORTC_PIN6CTRL	= 0x0656;
 static constexpr size_t kPORTC_PIN7CTRL	= 0x0657;
-;
+
 static constexpr size_t kPORTD_DIR		= 0x0660;
 static constexpr size_t kPORTD_DIRSET	= 0x0661;
 static constexpr size_t kPORTD_DIRCLR	= 0x0662;
@@ -104,7 +104,7 @@ static constexpr size_t kPORTD_PIN4CTRL	= 0x0674;
 static constexpr size_t kPORTD_PIN5CTRL	= 0x0675;
 static constexpr size_t kPORTD_PIN6CTRL	= 0x0676;
 static constexpr size_t kPORTD_PIN7CTRL	= 0x0677;
-;
+
 static constexpr size_t kPORTE_DIR		= 0x0680;
 static constexpr size_t kPORTE_DIRSET	= 0x0681;
 static constexpr size_t kPORTE_DIRCLR	= 0x0682;
@@ -126,7 +126,7 @@ static constexpr size_t kPORTE_PIN4CTRL	= 0x0694;
 static constexpr size_t kPORTE_PIN5CTRL	= 0x0695;
 static constexpr size_t kPORTE_PIN6CTRL	= 0x0696;
 static constexpr size_t kPORTE_PIN7CTRL	= 0x0697;
-;
+
 static constexpr size_t kPORTF_DIR		= 0x06A0;
 static constexpr size_t kPORTF_DIRSET	= 0x06A1;
 static constexpr size_t kPORTF_DIRCLR	= 0x06A2;
@@ -148,7 +148,7 @@ static constexpr size_t kPORTF_PIN4CTRL	= 0x06B4;
 static constexpr size_t kPORTF_PIN5CTRL	= 0x06B5;
 static constexpr size_t kPORTF_PIN6CTRL	= 0x06B6;
 static constexpr size_t kPORTF_PIN7CTRL	= 0x06B7;
-;
+
 static constexpr size_t kPORTH_DIR		= 0x06E0;
 static constexpr size_t kPORTH_DIRSET	= 0x06E1;
 static constexpr size_t kPORTH_DIRCLR	= 0x06E2;
@@ -170,7 +170,7 @@ static constexpr size_t kPORTH_PIN4CTRL	= 0x06F4;
 static constexpr size_t kPORTH_PIN5CTRL	= 0x06F5;
 static constexpr size_t kPORTH_PIN6CTRL	= 0x06F6;
 static constexpr size_t kPORTH_PIN7CTRL	= 0x06F7;
-;
+
 static constexpr size_t kPORTJ_DIR		= 0x0700;
 static constexpr size_t kPORTJ_DIRSET	= 0x0701;
 static constexpr size_t kPORTJ_DIRCLR	= 0x0702;
@@ -192,7 +192,7 @@ static constexpr size_t kPORTJ_PIN4CTRL	= 0x0714;
 static constexpr size_t kPORTJ_PIN5CTRL	= 0x0715;
 static constexpr size_t kPORTJ_PIN6CTRL	= 0x0716;
 static constexpr size_t kPORTJ_PIN7CTRL	= 0x0717;
-;
+
 static constexpr size_t kPORTK_DIR		= 0x0720;
 static constexpr size_t kPORTK_DIRSET	= 0x0721;
 static constexpr size_t kPORTK_DIRCLR	= 0x0722;
@@ -214,7 +214,7 @@ static constexpr size_t kPORTK_PIN4CTRL	= 0x0734;
 static constexpr size_t kPORTK_PIN5CTRL	= 0x0735;
 static constexpr size_t kPORTK_PIN6CTRL	= 0x0736;
 static constexpr size_t kPORTK_PIN7CTRL	= 0x0737;
-;
+
 static constexpr size_t kPORTQ_DIR		= 0x07C0;
 static constexpr size_t kPORTQ_DIRSET	= 0x07C1;
 static constexpr size_t kPORTQ_DIRCLR	= 0x07C2;
@@ -236,7 +236,7 @@ static constexpr size_t kPORTQ_PIN4CTRL	= 0x07D4;
 static constexpr size_t kPORTQ_PIN5CTRL	= 0x07D5;
 static constexpr size_t kPORTQ_PIN6CTRL	= 0x07D6;
 static constexpr size_t kPORTQ_PIN7CTRL	= 0x07D7;
-;
+
 static constexpr size_t kPORTR_DIR		= 0x07E0;
 static constexpr size_t kPORTR_DIRSET	= 0x07E1;
 static constexpr size_t kPORTR_DIRCLR	= 0x07E2;
