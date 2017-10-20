@@ -69,8 +69,7 @@ class BasicRegister8
 constexpr
 BasicRegister8::BasicRegister8 (size_t address):
 	_address (address)
-{
-}
+{ }
 
 
 constexpr
@@ -107,6 +106,7 @@ BasicRegister8::operator= (uint8_t value) const
 	write (value);
 	return *this;
 }
+
 
 inline uint8_t volatile&
 BasicRegister8::ref() const

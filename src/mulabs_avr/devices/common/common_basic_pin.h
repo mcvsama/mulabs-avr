@@ -71,6 +71,12 @@ template<class pMCU>
 			wait_for() const;
 
 		/**
+		 * Wait in loop until pin is in awaited_state.
+		 */
+		void
+		wait_for (bool awaited_state) const;
+
+		/**
 		 * Configure pin as input.
 		 */
 		void
@@ -105,6 +111,13 @@ template<class pMCU>
 		 */
 		void
 		signal() const;
+
+		/**
+		 * Send signal N times.
+		 */
+		template<class Integer>
+			void
+			signal (Integer times) const;
 
 	  protected:
 		Port	_port;
@@ -174,6 +187,15 @@ template<class M>
 
 template<class M>
 	inline void
+	CommonBasicPin<M>::wait_for (bool awaited_state) const
+	{
+		while (get() != awaited_state)
+			continue;
+	}
+
+
+template<class M>
+	inline void
 	CommonBasicPin<M>::configure_as_input() const
 	{
 		_port.pin_configure_as_input (_pin_number);
@@ -219,6 +241,16 @@ template<class M>
 		toggle();
 		toggle();
 	}
+
+
+template<class M>
+	template<class Integer>
+		inline void
+		CommonBasicPin<M>::signal (Integer times) const
+		{
+			for (Integer i = 0; i < times; ++i)
+				signal();
+		}
 
 } // namespace avr
 } // namespace mulabs

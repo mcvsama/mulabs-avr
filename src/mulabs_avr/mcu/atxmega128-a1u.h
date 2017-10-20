@@ -29,6 +29,8 @@
 #include <mulabs_avr/devices/xmega_au/basic_jtag.h>
 #include <mulabs_avr/devices/xmega_au/basic_pin.h>
 #include <mulabs_avr/devices/xmega_au/basic_port.h>
+#include <mulabs_avr/devices/xmega_au/basic_timer_01.h>
+#include <mulabs_avr/devices/xmega_au/basic_usart.h>
 #include <mulabs_avr/devices/xmega_au/event_system.h>
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
 #include <mulabs_avr/utility/array.h>
@@ -51,10 +53,12 @@ class ATXMega128A1U
 
 	using Clock				= xmega_au::BasicClock<MCU>;
 	using IO				= CommonBasicIO<MCU>;
-	using JTAG				= xmega_au::BasicJTAG<MCU>;
 	using Pin				= xmega_au::BasicPin<MCU>;
 	using Port				= xmega_au::BasicPort<MCU>;
 	using PinSet			= CommonBasicPinSet<MCU>;
+	using JTAG				= xmega_au::BasicJTAG<MCU>;
+	using Timer01			= xmega_au::BasicTimer01<MCU>;
+	using USART				= xmega_au::BasicUSART<MCU>;
 	using EventSystem		= xmega_au::EventSystem;
 	using InterruptSystem	= xmega_au::InterruptSystem;
 
@@ -93,6 +97,50 @@ class ATXMega128A1U
 
 	static constexpr Port	ports_index[kNumPorts] = { port_a, port_b, port_c, port_d, port_e,
 													   port_f, port_h, port_j, port_k, port_q, port_r };
+
+#define MULABS_DECLARE_TIMER_01(member_name, t) \
+	static constexpr Timer01 member_name { \
+		t##_CTRLA, t##_CTRLB, t##_CTRLC, t##_CTRLD, t##_CTRLE, \
+		t##_INTCTRLA, t##_INTCTRLB, \
+		t##_CTRLFCLR, t##_CTRLFSET, \
+		t##_CTRLGCLR, t##_CTRLGSET, \
+		t##_INTFLAGS, t##_TEMP, \
+		t##_CNT, t##_CNTL, t##_CNTH, \
+		t##_PER, t##_PERL, t##_PERH, t##_PERBUF, t##_PERBUFL, t##_PERBUFH, \
+		t##_CCA, t##_CCAL, t##_CCAH, t##_CCABUF, t##_CCABUFL, t##_CCABUFH, \
+		t##_CCB, t##_CCBL, t##_CCBH, t##_CCBBUF, t##_CCBBUFL, t##_CCBBUFH, \
+		t##_CCC, t##_CCCL, t##_CCCH, t##_CCCBUF, t##_CCCBUFL, t##_CCCBUFH, \
+		t##_CCD, t##_CCDL, t##_CCDH, t##_CCDBUF, t##_CCDBUFL, t##_CCDBUFH \
+	};
+
+	MULABS_DECLARE_TIMER_01(timer_c0, kTCC0)
+	MULABS_DECLARE_TIMER_01(timer_c1, kTCC1)
+	MULABS_DECLARE_TIMER_01(timer_d0, kTCD0)
+	MULABS_DECLARE_TIMER_01(timer_d1, kTCD1)
+	MULABS_DECLARE_TIMER_01(timer_e0, kTCE0)
+	MULABS_DECLARE_TIMER_01(timer_e1, kTCE1)
+	MULABS_DECLARE_TIMER_01(timer_f0, kTCF0)
+	MULABS_DECLARE_TIMER_01(timer_f1, kTCF1)
+
+#undef MULABS_DECLARE_TIMER_01
+
+#define MULABS_DECLARE_USART(member_name, u) \
+	static constexpr USART member_name { \
+		u##_DATA, u##_STATUS, \
+		u##_CTRLA, u##_CTRLB, u##_CTRLC, \
+		u##_BAUDCTRLA, u##_BAUDCTRLB \
+	};
+
+	MULABS_DECLARE_USART(usart_c0, kUSARTC0)
+	MULABS_DECLARE_USART(usart_c1, kUSARTC1)
+	MULABS_DECLARE_USART(usart_d0, kUSARTD0)
+	MULABS_DECLARE_USART(usart_d1, kUSARTD1)
+	MULABS_DECLARE_USART(usart_e0, kUSARTE0)
+	MULABS_DECLARE_USART(usart_e1, kUSARTE1)
+	MULABS_DECLARE_USART(usart_f0, kUSARTF0)
+	MULABS_DECLARE_USART(usart_f1, kUSARTF1)
+
+#undef MULABS_DECLARE_USART
 
   public:
 	/**

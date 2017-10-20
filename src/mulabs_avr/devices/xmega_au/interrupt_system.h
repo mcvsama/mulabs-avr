@@ -14,7 +14,6 @@
 #ifndef MULABS_AVR__DEVICES__XMEGA_AU__INTERRUPT_SYSTEM_H__INCLUDED
 #define MULABS_AVR__DEVICES__XMEGA_AU__INTERRUPT_SYSTEM_H__INCLUDED
 
-
 namespace mulabs {
 namespace avr {
 namespace xmega_au {
@@ -22,14 +21,75 @@ namespace xmega_au {
 class InterruptSystem
 {
   public:
-	enum class Config: uint8_t
+	enum class Level: uint8_t
 	{
-		Level0	= 0b00,	// Interrupts disabled
-		Level1	= 0b01,	// Low level interrupt
-		Level2	= 0b10,	// Medium-level interrupt
-		Level3	= 0b11,	// High-level interrupt
+		Disabled	= 0b00,	// Interrupts disabled
+		Low			= 0b01,	// Low level interrupt
+		Medium		= 0b10,	// Medium-level interrupt
+		High		= 0b11,	// High-level interrupt
 	};
+
+  public:
+	/**
+	 * Enable interrupts on selected levels.
+	 */
+	template<class ...Levels>
+		static void
+		enable (Levels...);
+
+	/**
+	 * Disable interrupts on selected levels.
+	 */
+	template<class ...Levels>
+		static void
+		disable (Levels...);
+
+  private:
+	/**
+	 * Helper for enable()/disable() of Levels.
+	 * Collect list of levels and prepare value for the PMIC_CTRL register.
+	 */
+	template<class Level, class ...Levels>
+		static constexpr uint8_t
+		make_levels_list (Level level, Levels ...levels)
+		{
+			return make_levels_list (level) | make_levels_list (levels...);
+		}
+
+	/**
+	 * Recursive stop-condition for make_oscillators_list().
+	 */
+	static constexpr uint8_t
+	make_levels_list (Level level)
+	{
+		return get_level_bit (level);
+	}
+
+	/**
+	 * Return level bit for registers like PMIC_CTRL.
+	 */
+	static constexpr uint8_t
+	get_level_bit (Level level)
+	{
+		return (1u << static_cast<uint8_t> (level)) >> 1;
+	}
 };
+
+
+template<class ...Levels>
+	inline void
+	InterruptSystem::enable (Levels ...levels)
+	{
+		PMIC_CTRL = PMIC_CTRL | make_levels_list (levels...);
+	}
+
+
+template<class ...Levels>
+	inline void
+	InterruptSystem::disable (Levels ...levels)
+	{
+		PMIC_CTRL = PMIC_CTRL & ~make_levels_list (levels...);
+	}
 
 } // namespace xmega_au
 } // namespace avr

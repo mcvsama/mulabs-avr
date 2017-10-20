@@ -23,16 +23,13 @@ namespace avr {
 namespace xmega_au {
 
 template<class pMCU>
-	class BasicPin;
-
-
-template<class pMCU>
 	class BasicPort
 	{
 	  public:
 		using MCU		= pMCU;
 		using Register8	= typename MCU::Register8;
 		using Pin		= typename MCU::Pin;
+		using PinBits	= typename MCU::PortIntegerType;
 
 	  public:
 		// Ctor:
@@ -66,55 +63,55 @@ template<class pMCU>
 		/**
 		 * Read byte from the port.
 		 */
-		uint8_t
+		PinBits
 		get() const;
 
 		/**
 		 * Alias for get().
 		 */
-		operator uint8_t() const;
+		operator PinBits() const;
 
 		/**
 		 * Write byte to all pins on port at once.
 		 */
 		void
-		set (uint8_t byte) const;
+		set (PinBits pin_bits) const;
 
 		/**
 		 * Alias for set (uint8_t).
 		 */
 		BasicPort const&
-		operator= (uint8_t byte) const;
+		operator= (PinBits pin_bits) const;
 
 		/**
 		 * Set selected pins to high level.
 		 */
 		void
-		set_high (uint8_t byte) const;
+		set_high (PinBits pin_bits) const;
 
 		/**
 		 * Set selected pins to low level.
 		 */
 		void
-		set_low (uint8_t byte) const;
+		set_low (PinBits pin_bits) const;
 
 		/**
 		 * Toggle selected pins (switch levels).
 		 */
 		void
-		toggle (uint8_t byte) const;
+		toggle (PinBits pin_bits) const;
 
 		/**
 		 * Configure pins denoted by set bits as inputs.
 		 */
 		void
-		configure_as_inputs (typename MCU::PortIntegerType pin_bits) const;
+		configure_as_inputs (PinBits pin_bits) const;
 
 		/**
 		 * Configure pins denoted by set bits as outputs.
 		 */
 		void
-		configure_as_outputs (typename MCU::PortIntegerType pin_bits) const;
+		configure_as_outputs (PinBits pin_bits) const;
 
 		/**
 		 * Configure individual pin as input.
@@ -159,35 +156,35 @@ template<class pMCU>
 		pin_toggle (uint8_t pin_number) const;
 
 		/**
-		 * Configure interrupt 0 (INT0).
+		 * Configure interrupt 0/1.
 		 */
-		void
-		configure_interrupt_0 (InterruptSystem::Config) const;
+		template<uint8_t Interrupt>
+			void
+			set_interrupt (InterruptSystem::Level) const;
 
 		/**
-		 * Select source pin for interrupt 0 (INT0).
+		 * Select source pins for interrupt 0/1.
 		 * The sense configuration is set with Pin::set_sense_configuration().
 		 */
-		template<class ...Pins>
+		template<uint8_t Interrupt, class ...Pins>
 			void
-			select_pins_for_interrupt_0 (Pins const ...pins) const;
+			select_pins_for_interrupt (Pins const ...pins) const;
 
 		/**
-		 * Configure interrupt 1 (INT1).
+		 * Enable given source pins for interrupts 0/1.
 		 */
-		void
-		configure_interrupt_1 (InterruptSystem::Config) const;
+		template<uint8_t Interrupt, class ...Pins>
+			void
+			enable_pins_for_interrupt (Pins const ...pins) const;
 
 		/**
-		 * Select source pin for interrupt 1 (INT1).
-		 * The sense configuration is set with Pin::set_sense_configuration().
+		 * Disable given source pins for interrupts 0/1.
 		 */
-		template<class ...Pins>
+		template<uint8_t Interrupt, class ...Pins>
 			void
-			select_pins_for_interrupt_1 (Pins const ...pins) const;
+			disable_pins_for_interrupt (Pins const ...pins) const;
 
 		// TODO pins remapping REMAP
-		// TODO const używaj wszędzie constów
 
 		constexpr typename MCU::Register8
 		pinctrl_register (uint8_t pin_number) const;
@@ -202,8 +199,8 @@ template<class pMCU>
 			constexpr typename MCU::PortIntegerType
 			make_pin_set (Pin const pin, Pins const ...pins) const
 			{
-				// TODO: if (constexpr (pin.port() != *this))
-				// TODO: 	static_assert (false, "wrong Pin passed to the port");
+				// TODO: if constexpr (pin.port() != *this)
+				// TODO:	static_assert (false, "wrong Pin passed to the port");
 
 				return bitnum<typename MCU::PortIntegerType> (pin.pin_number()) | make_pin_set (pins...);
 			}
@@ -215,8 +212,8 @@ template<class pMCU>
 			constexpr typename MCU::PortIntegerType
 			make_pin_set (Pin const pin) const
 			{
-				// TODO: if (constexpr (pin.port() != *this))
-				// TODO: 	static_assert (false, "wrong Pin passed to the port");
+				// TODO: if constexpr (pin.port() != *this)
+				// TODO:	static_assert (false, "wrong Pin passed to the port");
 
 				return bitnum<typename MCU::PortIntegerType> (pin.pin_number());
 			}
@@ -255,13 +252,15 @@ template<class M>
 	constexpr bool
 	BasicPort<M>::operator== (BasicPort const& other) const
 	{
+#define BASIC_PORT_EQ(n) (&_##n == &other._##n)
 		return _port_number == other._port_number
-			&& &_dir == &other._dir && &_dirset == &other._dirset && &_dirclr == &other._dirclr && &_dirtgl == &other._dirtgl
-			&& &_out == &other._out && &_outset == &other._outset && &_outclr == &other._outclr && &_outtgl == &other._outtgl
-			&& &_in == &other._in
-			&& &_intctrl == &other._intctrl && &_int0mask == &other._int0mask && &_int1mask == &other._int1mask && &_intflags == &other._intflags
-			&& &_pin0ctrl == &other._pin0ctrl && &_pin1ctrl == &other._pin1ctrl && &_pin2ctrl == &other._pin2ctrl && &_pin3ctrl == &other._pin3ctrl
-			&& &_pin4ctrl == &other._pin4ctrl && &_pin5ctrl == &other._pin5ctrl && &_pin6ctrl == &other._pin6ctrl && &_pin7ctrl == &other._pin7ctrl;
+			&& BASIC_PORT_EQ (dir) && BASIC_PORT_EQ (dirset) && BASIC_PORT_EQ (dirclr) && BASIC_PORT_EQ (dirtgl)
+			&& BASIC_PORT_EQ (out) && BASIC_PORT_EQ (outset) && BASIC_PORT_EQ (outclr) && BASIC_PORT_EQ (outtgl)
+			&& BASIC_PORT_EQ (in)
+			&& BASIC_PORT_EQ (intctrl) && BASIC_PORT_EQ (int0mask) && BASIC_PORT_EQ (int1mask) && BASIC_PORT_EQ (intflags)
+			&& BASIC_PORT_EQ (pin0ctrl) && BASIC_PORT_EQ (pin1ctrl) && BASIC_PORT_EQ (pin2ctrl) && BASIC_PORT_EQ (pin3ctrl)
+			&& BASIC_PORT_EQ (pin4ctrl) && BASIC_PORT_EQ (pin5ctrl) && BASIC_PORT_EQ (pin6ctrl) && BASIC_PORT_EQ (pin7ctrl);
+#undef BASIC_PORT_EQ
 	}
 
 
@@ -290,7 +289,7 @@ template<class M>
 
 
 template<class M>
-	inline uint8_t
+	inline typename BasicPort<M>::PinBits
 	BasicPort<M>::get() const
 	{
 		return _in;
@@ -299,7 +298,7 @@ template<class M>
 
 template<class M>
 	inline
-	BasicPort<M>::operator uint8_t() const
+	BasicPort<M>::operator PinBits() const
 	{
 		return get();
 	}
@@ -307,48 +306,48 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicPort<M>::set (uint8_t byte) const
+	BasicPort<M>::set (PinBits pin_bits) const
 	{
-		_out = byte;
+		_out = pin_bits;
 	}
 
 
 template<class M>
 	inline BasicPort<M> const&
-	BasicPort<M>::operator= (uint8_t byte) const
+	BasicPort<M>::operator= (PinBits pin_bits) const
 	{
-		set (byte);
+		set (pin_bits);
 		return *this;
 	}
 
 
 template<class M>
 	inline void
-	BasicPort<M>::set_high (uint8_t byte) const
+	BasicPort<M>::set_high (PinBits pin_bits) const
 	{
-		_outset = byte;
+		_outset = pin_bits;
 	}
 
 
 template<class M>
 	inline void
-	BasicPort<M>::set_low (uint8_t byte) const
+	BasicPort<M>::set_low (PinBits pin_bits) const
 	{
-		_outclr = byte;
+		_outclr = pin_bits;
 	}
 
 
 template<class M>
 	inline void
-	BasicPort<M>::toggle (uint8_t byte) const
+	BasicPort<M>::toggle (PinBits pin_bits) const
 	{
-		_outtgl = byte;
+		_outtgl = pin_bits;
 	}
 
 
 template<class M>
 	inline void
-	BasicPort<M>::configure_as_inputs (typename MCU::PortIntegerType pin_bits) const
+	BasicPort<M>::configure_as_inputs (PinBits pin_bits) const
 	{
 		_dirclr = pin_bits;
 	}
@@ -356,7 +355,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicPort<M>::configure_as_outputs (typename MCU::PortIntegerType pin_bits) const
+	BasicPort<M>::configure_as_outputs (PinBits pin_bits) const
 	{
 		_dirset = pin_bits;
 	}
@@ -422,36 +421,58 @@ template<class M>
 
 
 template<class M>
-	inline void
-	BasicPort<M>::configure_interrupt_0 (InterruptSystem::Config config) const
-	{
-		_intctrl = (_intctrl & ~0b11) | static_cast<uint8_t> (config);
-	}
-
-
-template<class M>
-	template<class ...Pins>
+	template<uint8_t Interrupt>
 		inline void
-		BasicPort<M>::select_pins_for_interrupt_0 (Pins const ...pins) const
+		BasicPort<M>::set_interrupt (InterruptSystem::Level level) const
 		{
-			_int0mask = make_pin_set (pins...);
+			static_assert (Interrupt == 0 || Interrupt == 1, "interrupt parameter must be 0 or 1");
+
+			if constexpr (Interrupt == 0)
+				_intctrl = (_intctrl & ~0b0011) | static_cast<uint8_t> (level);
+			else if constexpr (Interrupt == 1)
+				_intctrl = (_intctrl & ~0b1100) | (static_cast<uint8_t> (level) << 2);
 		}
 
 
 template<class M>
-	inline void
-	BasicPort<M>::configure_interrupt_1 (InterruptSystem::Config config) const
-	{
-		_intctrl = (_intctrl & ~0b1100) | (static_cast<uint8_t> (config) << 2);
-	}
+	template<uint8_t Interrupt, class ...Pins>
+		inline void
+		BasicPort<M>::select_pins_for_interrupt (Pins const ...pins) const
+		{
+			static_assert (Interrupt == 0 || Interrupt == 1, "interrupt parameter must be 0 or 1");
+
+			if constexpr (Interrupt == 0)
+				_int0mask = make_pin_set (pins...);
+			else if constexpr (Interrupt == 1)
+				_int1mask = make_pin_set (pins...);
+		}
 
 
 template<class M>
-	template<class ...Pins>
+	template<uint8_t Interrupt, class ...Pins>
 		inline void
-		BasicPort<M>::select_pins_for_interrupt_1 (Pins const ...pins) const
+		BasicPort<M>::enable_pins_for_interrupt (Pins const ...pins) const
 		{
-			_int1mask = make_pin_set (pins...);
+			static_assert (Interrupt == 0 || Interrupt == 1, "interrupt parameter must be 0 or 1");
+
+			if constexpr (Interrupt == 0)
+				_int0mask = _int0mask.read() | make_pin_set (pins...);
+			else if constexpr (Interrupt == 1)
+				_int1mask = _int1mask.read() | make_pin_set (pins...);
+		}
+
+
+template<class M>
+	template<uint8_t Interrupt, class ...Pins>
+		inline void
+		BasicPort<M>::disable_pins_for_interrupt (Pins const ...pins) const
+		{
+			static_assert (Interrupt == 0 || Interrupt == 1, "interrupt parameter must be 0 or 1");
+
+			if constexpr (Interrupt == 0)
+				_int0mask = _int0mask & ~make_pin_set (pins...);
+			else if constexpr (Interrupt == 1)
+				_int1mask = _int1mask & ~make_pin_set (pins...);
 		}
 
 

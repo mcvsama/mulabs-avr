@@ -22,34 +22,31 @@ namespace avr {
 namespace xmega_au {
 
 template<class pMCU>
-	class BasicPort;
-
-
-template<class pMCU>
 	class BasicPin: public CommonBasicPin<pMCU>
 	{
 		using MCU	= pMCU;
 		using Port	= typename MCU::Port;
 
+	  public:
 		enum class Configuration: uint8_t
 		{
-			TotemPole		= 0b00'000'000,
-			BusKeeper		= 0b00'001'000,
-			PullDown		= 0b00'010'000,
-			PullUp			= 0b00'011'000,
-			WiredOr			= 0b00'100'000,
-			WiredAnd		= 0b00'101'000,
-			WiredOrPull		= 0b00'110'000,
-			WiredAndPull	= 0b00'111'000,
+			TotemPole		= 0b000 << 3,
+			BusKeeper		= 0b001 << 3,
+			PullDown		= 0b010 << 3,
+			PullUp			= 0b011 << 3,
+			WiredOr			= 0b100 << 3,
+			WiredAnd		= 0b101 << 3,
+			WiredOrPull		= 0b110 << 3,
+			WiredAndPull	= 0b111 << 3,
 		};
 
 		enum class SenseConfiguration: uint8_t
 		{
-			BothEdges		= 0b00000'000,
-			RisingEdge		= 0b00000'001,
-			FallingEdge		= 0b00000'010,
-			LowLevel		= 0b00000'011,
-			InputDisable	= 0b00000'111,
+			BothEdges		= 0b000,
+			RisingEdge		= 0b001,
+			FallingEdge		= 0b010,
+			LowLevel		= 0b011,
+			DigitalDisable	= 0b111, // Only ports A…F support disabling.
 		};
 
 	  public:
@@ -90,7 +87,7 @@ template<class pMCU>
 		 * Set pin configuration.
 		 */
 		void
-		set_configuration (Configuration) const;
+		set (Configuration) const;
 
 		/**
 		 * Return current input/sense configuration.
@@ -102,11 +99,15 @@ template<class pMCU>
 		 * Set input/sense configuration.
 		 */
 		void
-		set_sense_configuration (SenseConfiguration) const;
+		set (SenseConfiguration) const;
 
 		/**
-		 * Enable this pin to be source for interrupt 0.
+		 * Enable/disable this pin to be source for interrupt 0/1.
 		 */
+		template<uint8_t Interrupt>
+			void
+			set_selected_for_interrupt (bool selected) const;
+
 		// TODO int0 and int1 source pin selection mask (INT0MASK, INT1MASK)
 
 	  private:
@@ -160,9 +161,9 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicPin<M>::set_configuration (Configuration new_configuration) const
+	BasicPin<M>::set (Configuration new_configuration) const
 	{
-		pinctrl_register() = (pinctrl_register().read() & 0b11'000'111) | new_configuration;
+		pinctrl_register().write ((pinctrl_register().read() & 0b11'000'111) | static_cast<uint8_t> (new_configuration));
 	}
 
 
@@ -176,10 +177,24 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicPin<M>::set_sense_configuration (SenseConfiguration new_sense_configuration) const
+	BasicPin<M>::set (SenseConfiguration new_sense_configuration) const
 	{
-		pinctrl_register() = (pinctrl_register().read() & 0b11'111'000) | new_sense_configuration;
+		pinctrl_register().write ((pinctrl_register().read() & 0b11'111'000) | static_cast<uint8_t> (new_sense_configuration));
 	}
+
+
+template<class M>
+	template<uint8_t Interrupt>
+		inline void
+		BasicPin<M>::set_selected_for_interrupt (bool selected) const
+		{
+			static_assert (Interrupt == 0 || Interrupt == 1, "interrupt parameter must be 0 or 1");
+
+			if (selected)
+				this->port().template enable_pins_for_interrupt<Interrupt> (*this);
+			else
+				this->port().template disable_pins_for_interrupt<Interrupt> (*this);
+		}
 
 
 template<class M>

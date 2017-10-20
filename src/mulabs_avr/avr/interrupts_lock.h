@@ -34,6 +34,11 @@ class InterruptsLock
 	// Dtor
 	~InterruptsLock();
 
+  public:
+	template<class Function>
+		static void
+		synchronize (Function callback);
+
   private:
 	int _saved_interrupt_flag;
 };
@@ -53,6 +58,15 @@ InterruptsLock::~InterruptsLock()
 	else
 		clear_bit (SREG, 7);
 }
+
+
+template<class Function>
+	inline void
+	InterruptsLock::synchronize (Function callback)
+	{
+		InterruptsLock lock;
+		callback();
+	}
 
 } // namespace avr
 } // namespace mulabs

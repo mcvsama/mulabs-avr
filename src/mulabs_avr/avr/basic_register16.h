@@ -29,12 +29,14 @@ class BasicRegister16
   public:
 	// Ctor
 	constexpr
+	BasicRegister16 (size_t base_address);
+
+	// Ctor
+	constexpr
 	BasicRegister16 (BasicRegister8 low, BasicRegister8 high);
 
 	uint16_t
 	read() const;
-
-	operator uint16_t() const;
 
 	void
 	write (uint16_t value) const;
@@ -42,40 +44,49 @@ class BasicRegister16
 	BasicRegister16 const&
 	operator= (uint16_t value) const;
 
+	/**
+	 * Reference the memory-mapped register.
+	 */
+	uint16_t volatile&
+	ref() const;
+
   private:
-	BasicRegister8	_low;
-	BasicRegister8	_high;
+	size_t	_address;
 };
 
 
 constexpr
-BasicRegister16::BasicRegister16 (BasicRegister8 low, BasicRegister8 high):
-	_low (low),
-	_high (high)
-{
-}
+BasicRegister16::BasicRegister16 (size_t base_address):
+	_address (base_address)
+{ }
 
 
 inline uint16_t
 BasicRegister16::read() const
 {
-	InterruptsLock lock;
-
-	uint8_t l = _low;
-	uint8_t h = _high;
-	return static_cast<uint16_t> (h) << 8 | l;
+	return ref();
 }
 
 
 inline void
 BasicRegister16::write (uint16_t value) const
 {
-	InterruptsLock lock;
+	ref() = value;
+}
 
-	uint8_t l = value & 0xff;
-	uint8_t h = value >> 8;
-	_high = h;
-	_low = l;
+
+inline BasicRegister16 const&
+BasicRegister16::operator= (uint16_t value) const
+{
+	write (value);
+	return *this;
+}
+
+
+inline uint16_t volatile&
+BasicRegister16::ref() const
+{
+	return *reinterpret_cast<uint16_t volatile*> (_address);
 }
 
 } // namespace avr
