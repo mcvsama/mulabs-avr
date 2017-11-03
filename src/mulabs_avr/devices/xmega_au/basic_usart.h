@@ -76,15 +76,15 @@ template<class pMCU>
 		};
 
 	  public:
-		// Ctor:
-		constexpr
-		BasicUSART (Register8 data, Register8 status,
-					Register8 ctrla, Register8 ctrlb, Register8 ctrlc,
-					Register8 baudctrla, Register8 baudctrlb);
+		// Ctor
+		explicit constexpr
+		BasicUSART (size_t base_address);
 
+		// Equality operator
 		constexpr bool
 		operator== (BasicUSART const& other) const;
 
+		// Inequality operator
 		constexpr bool
 		operator!= (BasicUSART const& other) const;
 
@@ -293,20 +293,24 @@ template<class pMCU>
 		set_baud_rate_scale (int8_t scale) const;
 
 	  private:
-		Register8	_data, _status;
-		Register8	_ctrla, _ctrlb, _ctrlc;
-		Register8	_baudctrla, _baudctrlb;
+		size_t const	_base_address;
+		Register8 const	_data, _status;
+		Register8 const	_ctrla, _ctrlb, _ctrlc;
+		Register8 const	_baudctrla, _baudctrlb;
 	};
 
 
 template<class M>
 	constexpr
-	BasicUSART<M>::BasicUSART (Register8 data, Register8 status,
-							   Register8 ctrla, Register8 ctrlb, Register8 ctrlc,
-							   Register8 baudctrla, Register8 baudctrlb):
-		_data (data), _status (status),
-		_ctrla (ctrla), _ctrlb (ctrlb), _ctrlc (ctrlc),
-		_baudctrla (baudctrla), _baudctrlb (baudctrlb)
+	BasicUSART<M>::BasicUSART (size_t base_address):
+		_base_address (base_address),
+		_data (base_address + 0x00),
+		_status (base_address + 0x01),
+		_ctrla (base_address + 0x03),
+		_ctrlb (base_address + 0x04),
+		_ctrlc (base_address + 0x05),
+		_baudctrla (base_address + 0x06),
+		_baudctrlb (base_address + 0x07)
 	{ }
 
 
@@ -314,11 +318,7 @@ template<class M>
 	constexpr bool
 	BasicUSART<M>::operator== (BasicUSART const& other) const
 	{
-#define BASIC_USART_EQ(n) (&_##n == &other._##n)
-		return BASIC_USART_EQ (data) && BASIC_USART_EQ (status)
-			&& BASIC_USART_EQ (ctrla) && BASIC_USART_EQ (ctrlb) && BASIC_USART_EQ (ctrlc)
-			&& BASIC_USART_EQ (baudctrla) && BASIC_USART_EQ (baudctrlb);
-#undef BASIC_USART_EQ
+		return _base_address == other._base_address;
 	}
 
 

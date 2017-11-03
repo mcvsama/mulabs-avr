@@ -32,19 +32,15 @@ template<class pMCU>
 		using PinBits	= typename MCU::PortIntegerType;
 
 	  public:
-		// Ctor:
-		constexpr
-		BasicPort (uint8_t port_number,
-				   Register8 dir, Register8 dirset, Register8 dirclr, Register8 dirtgl,
-				   Register8 out, Register8 outset, Register8 outclr, Register8 outtgl,
-				   Register8 in,
-				   Register8 intctrl, Register8 int0mask, Register8 int1mask, Register8 intflags,
-				   Register8 pin0ctrl, Register8 pin1ctrl, Register8 pin2ctrl, Register8 pin3ctrl,
-				   Register8 pin4ctrl, Register8 pin5ctrl, Register8 pin6ctrl, Register8 pin7ctrl);
+		// Ctor
+		explicit constexpr
+		BasicPort (size_t base_address, uint8_t port_number);
 
+		// Equality operator
 		constexpr bool
 		operator== (BasicPort const& other) const;
 
+		// Inequality operator
 		constexpr bool
 		operator!= (BasicPort const& other) const;
 
@@ -215,34 +211,46 @@ template<class pMCU>
 			// TODO:	static_assert (false, "wrong Pin passed to the port");
 
 			return 1 << pin.pin_number();
+		}
 
 	  private:
-		uint8_t		_port_number;
-		Register8	_dir, _dirset, _dirclr, _dirtgl;
-		Register8	_out, _outset, _outclr, _outtgl;
-		Register8	_in;
-		Register8	_intctrl, _int0mask, _int1mask, _intflags;
-		Register8	_pin0ctrl, _pin1ctrl, _pin2ctrl, _pin3ctrl;
-		Register8	_pin4ctrl, _pin5ctrl, _pin6ctrl, _pin7ctrl;
+		size_t const	_base_address;
+		uint8_t const	_port_number;
+		Register8 const	_dir, _dirset, _dirclr, _dirtgl;
+		Register8 const	_out, _outset, _outclr, _outtgl;
+		Register8 const	_in;
+		Register8 const	_intctrl, _int0mask, _int1mask, _intflags;
+		Register8 const	_pin0ctrl, _pin1ctrl, _pin2ctrl, _pin3ctrl;
+		Register8 const	_pin4ctrl, _pin5ctrl, _pin6ctrl, _pin7ctrl;
 	};
 
 
 template<class M>
 	constexpr
-	BasicPort<M>::BasicPort (uint8_t port_number,
-							 Register8 dir, Register8 dirset, Register8 dirclr, Register8 dirtgl,
-							 Register8 out, Register8 outset, Register8 outclr, Register8 outtgl,
-							 Register8 in,
-							 Register8 intctrl, Register8 int0mask, Register8 int1mask, Register8 intflags,
-							 Register8 pin0ctrl, Register8 pin1ctrl, Register8 pin2ctrl, Register8 pin3ctrl,
-							 Register8 pin4ctrl, Register8 pin5ctrl, Register8 pin6ctrl, Register8 pin7ctrl):
+	BasicPort<M>::BasicPort (size_t base_address, uint8_t port_number):
+		_base_address (base_address),
 		_port_number (port_number),
-		_dir (dir), _dirset (dirset), _dirclr (dirclr), _dirtgl (dirtgl),
-		_out (out), _outset (outset), _outclr (outclr), _outtgl (outtgl),
-		_in (in),
-		_intctrl (intctrl), _int0mask (int0mask), _int1mask (int1mask), _intflags (intflags),
-		_pin0ctrl (pin0ctrl), _pin1ctrl (pin1ctrl), _pin2ctrl (pin2ctrl), _pin3ctrl (pin3ctrl),
-		_pin4ctrl (pin4ctrl), _pin5ctrl (pin5ctrl), _pin6ctrl (pin6ctrl), _pin7ctrl (pin7ctrl)
+		_dir (base_address + 0x00),
+		_dirset (base_address + 0x01),
+		_dirclr (base_address + 0x02),
+		_dirtgl (base_address + 0x03),
+		_out (base_address + 0x04),
+		_outset (base_address + 0x05),
+		_outclr (base_address + 0x06),
+		_outtgl (base_address + 0x07),
+		_in (base_address + 0x08),
+		_intctrl (base_address + 0x09),
+		_int0mask (base_address + 0x0a),
+		_int1mask (base_address + 0x0b),
+		_intflags (base_address + 0x0c),
+		_pin0ctrl (base_address + 0x10),
+		_pin1ctrl (base_address + 0x11),
+		_pin2ctrl (base_address + 0x12),
+		_pin3ctrl (base_address + 0x13),
+		_pin4ctrl (base_address + 0x14),
+		_pin5ctrl (base_address + 0x15),
+		_pin6ctrl (base_address + 0x16),
+		_pin7ctrl (base_address + 0x17)
 	{ }
 
 
@@ -250,15 +258,7 @@ template<class M>
 	constexpr bool
 	BasicPort<M>::operator== (BasicPort const& other) const
 	{
-#define BASIC_PORT_EQ(n) (&_##n == &other._##n)
-		return _port_number == other._port_number
-			&& BASIC_PORT_EQ (dir) && BASIC_PORT_EQ (dirset) && BASIC_PORT_EQ (dirclr) && BASIC_PORT_EQ (dirtgl)
-			&& BASIC_PORT_EQ (out) && BASIC_PORT_EQ (outset) && BASIC_PORT_EQ (outclr) && BASIC_PORT_EQ (outtgl)
-			&& BASIC_PORT_EQ (in)
-			&& BASIC_PORT_EQ (intctrl) && BASIC_PORT_EQ (int0mask) && BASIC_PORT_EQ (int1mask) && BASIC_PORT_EQ (intflags)
-			&& BASIC_PORT_EQ (pin0ctrl) && BASIC_PORT_EQ (pin1ctrl) && BASIC_PORT_EQ (pin2ctrl) && BASIC_PORT_EQ (pin3ctrl)
-			&& BASIC_PORT_EQ (pin4ctrl) && BASIC_PORT_EQ (pin5ctrl) && BASIC_PORT_EQ (pin6ctrl) && BASIC_PORT_EQ (pin7ctrl);
-#undef BASIC_PORT_EQ
+		return _base_address == other._base_address;
 	}
 
 

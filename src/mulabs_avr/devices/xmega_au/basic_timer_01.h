@@ -113,23 +113,15 @@ template<class pMCU>
 		};
 
 	  public:
-		// Ctor:
-		constexpr
-		BasicTimer01 (Register8 ctrla, Register8 ctrlb, Register8 ctrlc, Register8 ctrld, Register8 ctrle,
-					  Register8 intctrla, Register8 intctrlb,
-					  Register8 ctrlfclr, Register8 ctrlfset,
-					  Register8 ctrlgclr, Register8 ctrlgset,
-					  Register8 intflags, Register8 temp,
-					  Register16 cnt, Register8 cntl, Register8 cnth,
-					  Register16 per, Register8 perl, Register8 perh, Register16 perbuf, Register8 perbufl, Register8 perbufh,
-					  Register16 cca, Register8 ccal, Register8 ccah, Register16 ccabuf, Register8 ccabufl, Register8 ccabufh,
-					  Register16 ccb, Register8 ccbl, Register8 ccbh, Register16 ccbbuf, Register8 ccbbufl, Register8 ccbbufh,
-					  Register16 ccc, Register8 cccl, Register8 ccch, Register16 cccbuf, Register8 cccbufl, Register8 cccbufh,
-					  Register16 ccd, Register8 ccdl, Register8 ccdh, Register16 ccdbuf, Register8 ccdbufl, Register8 ccdbufh);
+		// Ctor
+		explicit constexpr
+		BasicTimer01 (size_t base_address);
 
+		// Equality operator
 		constexpr bool
 		operator== (BasicTimer01 const& other) const;
 
+		// Inequality operator
 		constexpr bool
 		operator!= (BasicTimer01 const& other) const;
 
@@ -292,9 +284,9 @@ template<class pMCU>
 		 * Helper for enable()/disable() of CompareCaptureChannels.
 		 * Collect list of channels and prepare value for the CTRLB register.
 		 */
-		template<class Channel, class ...Channels>
+		template<class ...Channels>
 			constexpr uint8_t
-			make_channels_list (Channel channel, Channels ...channels) const
+			make_channels_list (CompareCaptureChannel channel, Channels ...channels) const
 			{
 				return make_channels_list (channel) | make_channels_list (channels...);
 			}
@@ -338,60 +330,64 @@ template<class pMCU>
 		}
 
 	  private:
-		Register8	_ctrla, _ctrlb, _ctrlc, _ctrld, _ctrle;
-		Register8	_intctrla, _intctrlb;
-		Register8	_ctrlfclr, _ctrlfset;
-		Register8	_ctrlgclr, _ctrlgset;
-		Register8	_intflags, _temp;
-		Register16	_cnt;
-		Register8	_cntl, _cnth;
-		Register16	_per;
-		Register8	_perl, _perh;
-		Register16	_perbuf;
-		Register8	_perbufl, _perbufh;
-		Register16	_cca;
-		Register8	_ccal, _ccah;
-		Register16	_ccabuf;
-		Register8	_ccabufl, _ccabufh;
-		Register16	_ccb;
-		Register8	_ccbl, _ccbh;
-		Register16	_ccbbuf;
-		Register8	_ccbbufl, _ccbbufh;
-		Register16	_ccc;
-		Register8	_cccl, _ccch;
-		Register16	_cccbuf;
-		Register8	_cccbufl, _cccbufh;
-		Register16	_ccd;
-		Register8	_ccdl, _ccdh;
-		Register16	_ccdbuf;
-		Register8	_ccdbufl, _ccdbufh;
+		size_t const	_base_address;
+		Register8 const	_ctrla, _ctrlb, _ctrlc, _ctrld, _ctrle;
+		Register8 const	_intctrla, _intctrlb;
+		Register8 const	_ctrlfclr, _ctrlfset;
+		Register8 const	_ctrlgclr, _ctrlgset;
+		Register8 const	_intflags;
+		Register8 const	_cntl, _cnth;
+		Register8 const	_perl, _perh;
+		Register8 const	_ccal, _ccah;
+		Register8 const	_ccbl, _ccbh;
+		Register8 const	_cccl, _ccch;
+		Register8 const	_ccdl, _ccdh;
+		Register8 const	_perbufl, _perbufh;
+		Register8 const	_ccabufl, _ccabufh;
+		Register8 const	_ccbbufl, _ccbbufh;
+		Register8 const	_cccbufl, _cccbufh;
+		Register8 const	_ccdbufl, _ccdbufh;
 	};
 
 
 template<class M>
 	constexpr
-	BasicTimer01<M>::BasicTimer01 (Register8 ctrla, Register8 ctrlb, Register8 ctrlc, Register8 ctrld, Register8 ctrle,
-								   Register8 intctrla, Register8 intctrlb,
-								   Register8 ctrlfclr, Register8 ctrlfset,
-								   Register8 ctrlgclr, Register8 ctrlgset,
-								   Register8 intflags, Register8 temp,
-								   Register16 cnt, Register8 cntl, Register8 cnth,
-								   Register16 per, Register8 perl, Register8 perh, Register16 perbuf, Register8 perbufl, Register8 perbufh,
-								   Register16 cca, Register8 ccal, Register8 ccah, Register16 ccabuf, Register8 ccabufl, Register8 ccabufh,
-								   Register16 ccb, Register8 ccbl, Register8 ccbh, Register16 ccbbuf, Register8 ccbbufl, Register8 ccbbufh,
-								   Register16 ccc, Register8 cccl, Register8 ccch, Register16 cccbuf, Register8 cccbufl, Register8 cccbufh,
-								   Register16 ccd, Register8 ccdl, Register8 ccdh, Register16 ccdbuf, Register8 ccdbufl, Register8 ccdbufh):
-		_ctrla (ctrla), _ctrlb (ctrlb), _ctrlc (ctrlc), _ctrld (ctrld), _ctrle (ctrle),
-		_intctrla (intctrla), _intctrlb (intctrlb),
-		_ctrlfclr (ctrlfclr), _ctrlfset (ctrlfset),
-		_ctrlgclr (ctrlgclr), _ctrlgset (ctrlgset),
-		_intflags (intflags), _temp (temp),
-		_cnt (cnt), _cntl (cntl), _cnth (cnth),
-		_per (per), _perl (perl), _perh (perh), _perbuf (perbuf), _perbufl (perbufl), _perbufh (perbufh),
-		_cca (cca), _ccal (ccal), _ccah (ccah), _ccabuf (ccabuf), _ccabufl (ccabufl), _ccabufh (ccabufh),
-		_ccb (ccb), _ccbl (ccbl), _ccbh (ccbh), _ccbbuf (ccbbuf), _ccbbufl (ccbbufl), _ccbbufh (ccbbufh),
-		_ccc (ccc), _cccl (cccl), _ccch (ccch), _cccbuf (cccbuf), _cccbufl (cccbufl), _cccbufh (cccbufh),
-		_ccd (ccd), _ccdl (ccdl), _ccdh (ccdh), _ccdbuf (ccdbuf), _ccdbufl (ccdbufl), _ccdbufh (ccdbufh)
+	BasicTimer01<M>::BasicTimer01 (size_t base_address):
+		_base_address (base_address),
+		_ctrla (base_address + 0x00),
+		_ctrlb (base_address + 0x01),
+		_ctrlc (base_address + 0x02),
+		_ctrld (base_address + 0x03),
+		_ctrle (base_address + 0x04),
+		_intctrla (base_address + 0x06),
+		_intctrlb (base_address + 0x07),
+		_ctrlfclr (base_address + 0x08),
+		_ctrlfset (base_address + 0x09),
+		_ctrlgclr (base_address + 0x0a),
+		_ctrlgset (base_address + 0x0b),
+		_intflags (base_address + 0x0c),
+		_cntl (base_address + 0x20),
+		_cnth (base_address + 0x21),
+		_perl (base_address + 0x26),
+		_perh (base_address + 0x27),
+		_ccal (base_address + 0x28),
+		_ccah (base_address + 0x29),
+		_ccbl (base_address + 0x2a),
+		_ccbh (base_address + 0x2b),
+		_cccl (base_address + 0x2c),
+		_ccch (base_address + 0x2d),
+		_ccdl (base_address + 0x2e),
+		_ccdh (base_address + 0x2f),
+		_perbufl (base_address + 0x36),
+		_perbufh (base_address + 0x37),
+		_ccabufl (base_address + 0x38),
+		_ccabufh (base_address + 0x39),
+		_ccbbufl (base_address + 0x3a),
+		_ccbbufh (base_address + 0x3b),
+		_cccbufl (base_address + 0x3c),
+		_cccbufh (base_address + 0x3d),
+		_ccdbufl (base_address + 0x3e),
+		_ccdbufh (base_address + 0x3f)
 	{ }
 
 
@@ -399,19 +395,7 @@ template<class M>
 	constexpr bool
 	BasicTimer01<M>::operator== (BasicTimer01 const& other) const
 	{
-#define BASIC_TIMER_EQ(n) (&_##n == &other._##n)
-		return BASIC_TIMER_EQ (ctrla) && BASIC_TIMER_EQ (ctrlb) && BASIC_TIMER_EQ (ctrlc) && BASIC_TIMER_EQ (ctrld) && BASIC_TIMER_EQ (ctrle)
-			&& BASIC_TIMER_EQ (intctrla) && BASIC_TIMER_EQ (intctrlb)
-			&& BASIC_TIMER_EQ (ctrlfclr) && BASIC_TIMER_EQ (ctrlfset)
-			&& BASIC_TIMER_EQ (ctrlgclr) && BASIC_TIMER_EQ (ctrlgset)
-			&& BASIC_TIMER_EQ (intflags) && BASIC_TIMER_EQ (temp)
-			&& BASIC_TIMER_EQ (cnt) && BASIC_TIMER_EQ (cntl) && BASIC_TIMER_EQ (cnth)
-			&& BASIC_TIMER_EQ (per) && BASIC_TIMER_EQ (perl) && BASIC_TIMER_EQ (perh) && BASIC_TIMER_EQ (perbuf) && BASIC_TIMER_EQ (perbufl) && BASIC_TIMER_EQ (perbufh)
-			&& BASIC_TIMER_EQ (cca) && BASIC_TIMER_EQ (ccal) && BASIC_TIMER_EQ (ccah) && BASIC_TIMER_EQ (ccabuf) && BASIC_TIMER_EQ (ccabufl) && BASIC_TIMER_EQ (ccabufh)
-			&& BASIC_TIMER_EQ (ccb) && BASIC_TIMER_EQ (ccbl) && BASIC_TIMER_EQ (ccbh) && BASIC_TIMER_EQ (ccbbuf) && BASIC_TIMER_EQ (ccbbufl) && BASIC_TIMER_EQ (ccbbufh)
-			&& BASIC_TIMER_EQ (ccc) && BASIC_TIMER_EQ (cccl) && BASIC_TIMER_EQ (ccch) && BASIC_TIMER_EQ (cccbuf) && BASIC_TIMER_EQ (cccbufl) && BASIC_TIMER_EQ (cccbufh)
-			&& BASIC_TIMER_EQ (ccd) && BASIC_TIMER_EQ (ccdl) && BASIC_TIMER_EQ (ccdh) && BASIC_TIMER_EQ (ccdbuf) && BASIC_TIMER_EQ (ccdbufl) && BASIC_TIMER_EQ (ccdbufh);
-#undef BASIC_TIMER_EQ
+		return _base_address == other._base_address;
 	}
 
 
