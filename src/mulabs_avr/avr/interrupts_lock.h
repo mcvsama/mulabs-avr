@@ -46,17 +46,14 @@ class InterruptsLock
 
 InterruptsLock::InterruptsLock()
 {
-	_saved_interrupt_flag = get_bit (SREG, 7);
+	_saved_interrupt_flag = get_bit<7> (SREG);
 	cli();
 }
 
 
 InterruptsLock::~InterruptsLock()
 {
-	if (_saved_interrupt_flag)
-		set_bit (SREG, 7);
-	else
-		clear_bit (SREG, 7);
+	set_bit_value<7> (SREG, _saved_interrupt_flag);
 }
 
 

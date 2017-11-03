@@ -324,7 +324,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_configure_as_input (uint8_t pin_number) const
 	{
-		configure_as_inputs (bitnum<uint8_t> (pin_number));
+		configure_as_inputs (1 << pin_number);
 	}
 
 
@@ -332,7 +332,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_configure_as_output (uint8_t pin_number) const
 	{
-		configure_as_outputs (bitnum<uint8_t> (pin_number));
+		configure_as_outputs (1 << pin_number);
 	}
 
 
@@ -340,7 +340,7 @@ template<class M>
 	inline bool
 	BasicPort<M>::pin_get (uint8_t pin_number) const
 	{
-		return get() & bitnum<uint8_t> (pin_number);
+		return get() & (1 << pin_number);
 	}
 
 
@@ -359,7 +359,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_set_high (uint8_t pin_number) const
 	{
-		set_high (bitnum<uint8_t> (pin_number));
+		set_high (1 << pin_number);
 	}
 
 
@@ -367,7 +367,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_set_low (uint8_t pin_number) const
 	{
-		set_low (bitnum<uint8_t> (pin_number));
+		set_low (1 << pin_number);
 	}
 
 
@@ -375,7 +375,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_toggle (uint8_t pin_number) const
 	{
-		toggle (bitnum<uint8_t> (pin_number));
+		toggle (1 << pin_number);
 	}
 
 
@@ -383,7 +383,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_enable_pull_up (uint8_t pin_number) const
 	{
-		enable_pull_up (bitnum<uint8_t> (pin_number));
+		enable_pull_up (1 << pin_number);
 	}
 
 
@@ -391,7 +391,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_disable_pull_up (uint8_t pin_number) const
 	{
-		disable_pull_up (bitnum<uint8_t> (pin_number));
+		disable_pull_up (1 << pin_number);
 	}
 
 } // namespace mega32u4

@@ -14,6 +14,10 @@
 #ifndef MULABS_AVR__UTILITY__ATOMIC_H__INCLUDED
 #define MULABS_AVR__UTILITY__ATOMIC_H__INCLUDED
 
+// Mulabs:
+#include <mulabs_avr/utility/bits.h>
+
+
 namespace mulabs {
 namespace avr {
 
@@ -95,6 +99,103 @@ template<class V>
 	Atomic<V>::store (Value value)
 	{
 		_value = value;
+	}
+
+
+/*
+ * Global functions
+ *
+ * Warning: These atomic instructions do not work on memory-mapped registers. Only regular SRAM memory can be modified
+ * with these. Also memory modified by the instructions must be within first 64 kB of SRAM.
+ */
+
+
+template<uint8_t BitMask>
+	inline void
+	atomic_sram_set_bitmask_value (uint8_t volatile& where, bool value)
+	{
+		if (value)
+		{
+			asm volatile (
+				"ldi	r16, %[mask]	\n\t"
+				".dc.w	0x9305			\n\t" // LAS instruction
+				: "+m" (where)
+				: "z" (&where), [mask] "i" (BitMask)
+				: "r16"
+			);
+		}
+		else
+		{
+			asm volatile (
+				"ldi	r16, %[mask]	\n\t"
+				".dc.w	0x9306			\n\t" // LAC instruction
+				: "+m" (where)
+				: "z" (&where), [mask] "i" (BitMask)
+				: "r16"
+			);
+		}
+	}
+
+
+template<uint8_t Bit>
+	inline void
+	atomic_sram_set_bit_value (uint8_t volatile& where, bool value)
+	{
+		atomic_sram_set_bitmask_value<bit<Bit>> (where, value);
+	}
+
+
+template<uint8_t BitMask>
+	inline void
+	atomic_sram_set_bitmask (uint8_t volatile& where)
+	{
+		atomic_sram_set_bitmask_value<BitMask> (where, true);
+	}
+
+
+template<uint8_t Bit>
+	inline void
+	atomic_sram_set_bit (uint8_t volatile& where)
+	{
+		atomic_sram_set_bit_value<Bit> (where, true);
+	}
+
+
+template<uint8_t BitMask>
+	inline void
+	atomic_sram_clear_bitmask (uint8_t volatile& where)
+	{
+		atomic_sram_set_bitmask_value<BitMask> (where, false);
+	}
+
+
+template<uint8_t Bit>
+	inline void
+	atomic_sram_clear_bit (uint8_t volatile& where)
+	{
+		atomic_sram_set_bit_value<Bit> (where, false);
+	}
+
+
+template<uint8_t BitMask>
+	inline void
+	atomic_sram_toggle_bitmask (uint8_t volatile& where)
+	{
+		asm volatile (
+			"ldi	r16, %[mask]	\n\t"
+			".dc.w	0x9307			\n\t" // LAT instruction
+			: "+m" (where)
+			: "z" (&where), [mask] "i" (BitMask)
+			: "r16"
+		);
+	}
+
+
+template<uint8_t Bit>
+	inline void
+	atomic_sram_toggle_bit (uint8_t volatile& where)
+	{
+		atomic_sram_toggle_bitmask<bit<Bit>> (where);
 	}
 
 } // namespace avr

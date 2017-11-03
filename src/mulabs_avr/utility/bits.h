@@ -14,75 +14,58 @@
 #ifndef MULABS_AVR__UTILITY__BITS_H__INCLUDED
 #define MULABS_AVR__UTILITY__BITS_H__INCLUDED
 
-// Local:
-#include "range.h"
-
-
 namespace mulabs {
 namespace avr {
 
-template<class T>
-	static constexpr T
-	bitnum (uint8_t bit)
-	{
-		return 1U << bit;
-	}
+template<uint8_t Bit>
+	constexpr uint8_t bit8 = static_cast<uint8_t> (1u) << Bit;
 
 
-template<class T>
-	static constexpr T
-	neg_bitnum (uint8_t bit)
-	{
-		return ~(1U << bit);
-	}
+template<uint8_t Bit>
+	constexpr uint16_t bit16 = static_cast<uint16_t> (1u) << Bit;
 
 
-template<class R>
+template<uint8_t Bit>
+	constexpr uint32_t bit32 = static_cast<uint32_t> (1u) << Bit;
+
+
+template<uint8_t Bit>
+	constexpr uint32_t bit = static_cast<uint32_t> (1u) << Bit;
+
+
+template<uint8_t Bit, class R>
 	static constexpr void
-	set_bit (R volatile& reg, uint8_t bit)
+	set_bit (R volatile& reg)
 	{
-		reg |= bitnum<R> (bit);
+		reg |= (static_cast<R> (1) << Bit);
 	}
 
 
-template<class R>
+template<uint8_t Bit, class R>
 	static constexpr void
-	clear_bit (R volatile& reg, uint8_t bit)
+	clear_bit (R volatile& reg)
 	{
-		reg &= neg_bitnum<R> (bit);
+		reg &= ~(static_cast<R> (1) << Bit);
 	}
 
 
-template<class R>
+template<uint8_t Bit, class R>
 	static constexpr void
-	set_bit_value (R volatile& reg, uint8_t bit, bool value)
+	set_bit_value (R volatile& reg, bool value)
 	{
-		value ? set_bit (reg, bit) : clear_bit (reg, bit);
+		if (value)
+			set_bit<Bit> (reg);
+		else
+			clear_bit<Bit> (reg);
 	}
 
 
-template<class R>
+template<uint8_t Bit, class R>
 	static constexpr bool
-	get_bit (R const& reg, uint8_t bit)
+	get_bit (R const volatile& reg)
 	{
-		return reg & bitnum<R> (bit);
+		return reg & (static_cast<R> (1) << Bit);
 	}
-
-
-constexpr float
-renormalize (float value, float a1, float b1, float a2, float b2) noexcept
-{
-	return b1 == a1
-		? a2
-		: (b2 - a2) / (b1 - a1) * value + (-(b2 - a2) / (b1 - a1) * a1 + a2);
-}
-
-
-constexpr float
-renormalize (float value, Range<float> range1, Range<float> range2) noexcept
-{
-	return renormalize (value, range1.min(), range1.max(), range2.min(), range2.max());
-}
 
 } // namespace avr
 } // namespace mulabs

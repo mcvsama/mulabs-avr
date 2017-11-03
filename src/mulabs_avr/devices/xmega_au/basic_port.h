@@ -193,7 +193,7 @@ template<class pMCU>
 		/**
 		 * Recursive function that collects Pins belonging to this port only.
 		 */
-		template<class Pin, class ...Pins>
+		template<class ...Pins>
 			// TODO zamiast MCU::PortIntegerType zrób PortPinSet czy PinSet8
 			// TODO PinSet i PortPinSet powinny zwracać obiekty Pin na żądanie
 			constexpr typename MCU::PortIntegerType
@@ -202,21 +202,19 @@ template<class pMCU>
 				// TODO: if constexpr (pin.port() != *this)
 				// TODO:	static_assert (false, "wrong Pin passed to the port");
 
-				return bitnum<typename MCU::PortIntegerType> (pin.pin_number()) | make_pin_set (pins...);
+				return (1 << pin.pin_number()) | make_pin_set (pins...);
 			}
 
 		/**
 		 * Recursive stop-condition for make_pin_set().
 		 */
-		template<class Pin>
-			constexpr typename MCU::PortIntegerType
-			make_pin_set (Pin const pin) const
-			{
-				// TODO: if constexpr (pin.port() != *this)
-				// TODO:	static_assert (false, "wrong Pin passed to the port");
+		constexpr typename MCU::PortIntegerType
+		make_pin_set (Pin const pin) const
+		{
+			// TODO: if constexpr (pin.port() != *this)
+			// TODO:	static_assert (false, "wrong Pin passed to the port");
 
-				return bitnum<typename MCU::PortIntegerType> (pin.pin_number());
-			}
+			return 1 << pin.pin_number();
 
 	  private:
 		uint8_t		_port_number;
@@ -365,7 +363,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_configure_as_input (uint8_t pin_number) const
 	{
-		_dirclr = bitnum<uint8_t> (pin_number);
+		_dirclr = 1 << pin_number;
 	}
 
 
@@ -373,7 +371,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_configure_as_output (uint8_t pin_number) const
 	{
-		_dirset = bitnum<uint8_t> (pin_number);
+		_dirset = 1 << pin_number;
 	}
 
 
@@ -381,7 +379,7 @@ template<class M>
 	inline bool
 	BasicPort<M>::pin_get (uint8_t pin_number) const
 	{
-		return _in.read() & bitnum<uint8_t> (pin_number);
+		return _in.read() & (1 << pin_number);
 	}
 
 
@@ -400,7 +398,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_set_high (uint8_t pin_number) const
 	{
-		_outset = bitnum<uint8_t> (pin_number);
+		_outset = 1 << pin_number;
 	}
 
 
@@ -408,7 +406,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_set_low (uint8_t pin_number) const
 	{
-		_outclr = bitnum<uint8_t> (pin_number);
+		_outclr = 1 << pin_number;
 	}
 
 
@@ -416,7 +414,7 @@ template<class M>
 	inline void
 	BasicPort<M>::pin_toggle (uint8_t pin_number) const
 	{
-		_outtgl = bitnum<uint8_t> (pin_number);
+		_outtgl = 1 << pin_number;
 	}
 
 

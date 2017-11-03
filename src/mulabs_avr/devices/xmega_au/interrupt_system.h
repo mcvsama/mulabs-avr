@@ -49,7 +49,7 @@ class InterruptSystem
 	 * Helper for enable()/disable() of Levels.
 	 * Collect list of levels and prepare value for the PMIC_CTRL register.
 	 */
-	template<class Level, class ...Levels>
+	template<class ...Levels>
 		static constexpr uint8_t
 		make_levels_list (Level level, Levels ...levels)
 		{

@@ -17,6 +17,9 @@
 // Standard:
 #include <stdlib.h>
 
+// Mulabs:
+#include <mulabs_avr/utility/bits.h>
+
 
 namespace mulabs {
 namespace avr {
@@ -61,6 +64,41 @@ class BasicRegister8
 	uint8_t volatile&
 	ref() const;
 
+	/**
+	 * Set given bit to given value.
+	 */
+	template<uint8_t Bit>
+		void
+		set_bit_value (bool value) const;
+
+	/**
+	 * Set given bit to 1.
+	 */
+	template<uint8_t Bit>
+		void
+		set_bit() const;
+
+	/**
+	 * Clear given bit.
+	 */
+	template<uint8_t Bit>
+		void
+		clear_bit() const;
+
+	/**
+	 * Set unsigned int value in given bits.
+	 */
+	template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit>
+		void
+		set_bits_value (uint8_t value) const;
+
+	/**
+	 * Return value of given bit.
+	 */
+	template<uint8_t Bit>
+		bool
+		get_bit() const;
+
   private:
 	size_t	_address;
 };
@@ -75,8 +113,7 @@ BasicRegister8::BasicRegister8 (size_t address):
 constexpr
 BasicRegister8::BasicRegister8 (uint8_t volatile& register_reference):
 	_address (reinterpret_cast<size_t> (&register_reference))
-{
-}
+{ }
 
 
 inline uint8_t
@@ -113,6 +150,49 @@ BasicRegister8::ref() const
 {
 	return *reinterpret_cast<uint8_t volatile*> (_address);
 }
+
+
+template<uint8_t Bit>
+	inline void
+	BasicRegister8::set_bit_value (bool value) const
+	{
+		mulabs::avr::set_bit_value<Bit> (ref(), value);
+	}
+
+
+template<uint8_t Bit>
+	inline void
+	BasicRegister8::set_bit() const
+	{
+		mulabs::avr::set_bit<Bit> (ref());
+	}
+
+
+template<uint8_t Bit>
+	inline void
+	BasicRegister8::clear_bit() const
+	{
+		mulabs::avr::clear_bit<Bit> (ref());
+	}
+
+
+template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit>
+	inline void
+	BasicRegister8::set_bits_value (uint8_t value) const
+	{
+		static_assert (LeastSignificantBit <= MostSignificantBit);
+
+		uint8_t const mask = static_cast<uint8_t> (0xff << (MostSignificantBit + 1)) | static_cast<uint8_t> (0xff >> (8 - LeastSignificantBit));
+		ref() = (ref() & mask) | (value << LeastSignificantBit);
+	}
+
+
+template<uint8_t Bit>
+	inline bool
+	BasicRegister8::get_bit() const
+	{
+		return mulabs::avr::get_bit<Bit> (ref());
+	}
 
 } // namespace avr
 } // namespace mulabs

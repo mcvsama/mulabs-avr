@@ -123,7 +123,7 @@ template<class M>
 	inline bool
 	BasicPin<M>::slew_rate_limit() const
 	{
-		return get_bit (pinctrl_register().read(), 7);
+		return get_bit<7> (pinctrl_register().read());
 	}
 
 
@@ -131,7 +131,7 @@ template<class M>
 	inline void
 	BasicPin<M>::set_slew_rate_limit (bool enabled) const
 	{
-		set_bit_value (pinctrl_register().ref(), 7, enabled);
+		set_bit_value<7> (pinctrl_register().ref(), enabled);
 	}
 
 
@@ -139,7 +139,7 @@ template<class M>
 	inline bool
 	BasicPin<M>::inverted_io() const
 	{
-		return get_bit (pinctrl_register().read(), 6);
+		return get_bit<6> (pinctrl_register().read());
 	}
 
 
@@ -147,7 +147,7 @@ template<class M>
 	inline void
 	BasicPin<M>::set_inverted_io (bool enabled) const
 	{
-		set_bit_value (pinctrl_register().ref(), 6, enabled);
+		set_bit_value<6> (pinctrl_register().ref(), enabled);
 	}
 
 
