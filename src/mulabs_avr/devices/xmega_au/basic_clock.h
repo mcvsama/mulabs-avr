@@ -280,22 +280,52 @@ template<class pMCU>
 		set (DFLLCalibrationReference2M);
 
 		/**
+		 * Set frequency ratio between the oscillator and the reference clock,
+		 * which is 1024 Hz (actual reference clock is 32768 divided by 32).
+		 */
+		static void
+		set_dfll_multiplication_factor (DFLL, uint16_t factor);
+
+		/**
+		 * Get DFLL fine calibration value.
+		 */
+		static uint8_t
+		dfll_fine_calibration_value (DFLL);
+
+		/**
+		 * Set DFLL fine calibration value (CALA register).
+		 *
+		 * Can be called only when DFLL is disabled.
+		 */
+		static void
+		set_dfll_fine_calibration_value (DFLL, uint8_t cal_a);
+
+		/**
+		 * Get DFLL coarse calibration value.
+		 */
+		static uint8_t
+		dfll_coarse_calibration_value (DFLL);
+
+		/**
+		 * Set DFLL coarse calibration value (CALB register).
+		 *
+		 * Can be called only when DFLL is disabled.
+		 */
+		static void
+		set_dfll_coarse_calibration_value (DFLL, uint8_t cal_b);
+
+		/**
 		 * Enable/disable DFLL.
 		 */
 		static void
 		set_dfll_enabled (DFLL, bool);
-
-		// TODO CALA (can only be written when dfll is disabled)
-		// TODO CALB (can only be written when dfll is disabled)
-		// TODO COMP1
-		// TODO COMP2
 
 	  private:
 		/**
 		 * Helper for enable()/disable() of Oscillators.
 		 * Collect list of oscillators and prepare value for the OSC_CTRL/OSC_STATUS registers.
 		 */
-		template<class Oscillator, class ...Oscillators>
+		template<class ...Oscillators>
 			static constexpr uint8_t
 			make_oscillators_list (Oscillator oscillator, Oscillators ...oscillators)
 			{
@@ -518,6 +548,92 @@ template<class M>
 
 			case DFLLCalibrationReference2M::TOSC32768Hz:
 				OSC_DFLLCTRL |= 0b1;
+				break;
+		}
+	}
+
+
+template<class M>
+	inline void
+	BasicClock<M>::set_dfll_multiplication_factor (DFLL dfll, uint16_t factor)
+	{
+		uint8_t lsb = (factor >> 0) & 0xff;
+		uint8_t msb = (factor >> 8) & 0xff;
+
+		switch (dfll)
+		{
+			case DFLL::RC32MHz:
+				DFLLRC32M_COMP1 = lsb;
+				DFLLRC32M_COMP2 = msb;
+				break;
+
+			case DFLL::RC2MHz:
+				DFLLRC2M_COMP1 = lsb;
+				DFLLRC2M_COMP2 = msb;
+				break;
+		}
+	}
+
+
+template<class M>
+	inline uint8_t
+	BasicClock<M>::dfll_fine_calibration_value (DFLL dfll)
+	{
+		switch (dfll)
+		{
+			case DFLL::RC32MHz:
+				return DFLLRC32M_CALA;
+
+			case DFLL::RC2MHz:
+				return DFLLRC2M_CALA;
+		}
+	}
+
+
+template<class M>
+	inline void
+	BasicClock<M>::set_dfll_fine_calibration_value (DFLL dfll, uint8_t cal_a)
+	{
+		switch (dfll)
+		{
+			case DFLL::RC32MHz:
+				DFLLRC32M_CALA = cal_a;
+				break;
+
+			case DFLL::RC2MHz:
+				DFLLRC2M_CALA = cal_a;
+				break;
+		}
+	}
+
+
+template<class M>
+	inline uint8_t
+	BasicClock<M>::dfll_coarse_calibration_value (DFLL dfll)
+	{
+		switch (dfll)
+		{
+			case DFLL::RC32MHz:
+				return DFLLRC32M_CALB;
+
+			case DFLL::RC2MHz:
+				return DFLLRC2M_CALB;
+		}
+	}
+
+
+template<class M>
+	inline void
+	BasicClock<M>::set_dfll_coarse_calibration_value (DFLL dfll, uint8_t cal_b)
+	{
+		switch (dfll)
+		{
+			case DFLL::RC32MHz:
+				DFLLRC32M_CALB = cal_b;
+				break;
+
+			case DFLL::RC2MHz:
+				DFLLRC2M_CALB = cal_b;
 				break;
 		}
 	}
