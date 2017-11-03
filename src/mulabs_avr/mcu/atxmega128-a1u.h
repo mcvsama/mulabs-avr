@@ -106,7 +106,6 @@ class ATXMega128A1U
 	static_assert (is_literal_type<ATXMega128A1U::Clock>::value, "Clock must be a literal type");
 	static_assert (is_literal_type<ATXMega128A1U::IO>::value, "IO must be a literal type");
 	static_assert (is_literal_type<ATXMega128A1U::Pin>::value, "Pin must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::PinSet>::value, "PinSet must be a literal type");
 	static_assert (is_literal_type<ATXMega128A1U::Port>::value, "Port must be a literal type");
 	static_assert (is_literal_type<ATXMega128A1U::PinSet>::value, "PinSet must be a literal type");
 	static_assert (is_literal_type<ATXMega128A1U::JTAG>::value, "JTAG must be a literal type");
