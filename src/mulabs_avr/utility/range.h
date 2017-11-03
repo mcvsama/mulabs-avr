@@ -14,7 +14,6 @@
 #ifndef MULABS_AVR__UTILITY__RANGE_H__INCLUDED
 #define MULABS_AVR__UTILITY__RANGE_H__INCLUDED
 
-
 namespace mulabs {
 namespace avr {
 
