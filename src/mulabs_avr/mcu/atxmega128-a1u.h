@@ -17,6 +17,7 @@
 // AVR:
 #include <avr/sleep.h>
 #include <avr/cpufunc.h>
+#include <avr/pgmspace.h>
 #include <util/delay.h>
 
 // Mulabs AVR:
@@ -60,6 +61,45 @@ class ATXMega128A1U
 	using USART				= xmega_au::BasicUSART<MCU>;
 	using EventSystem		= xmega_au::EventSystem;
 	using InterruptSystem	= xmega_au::InterruptSystem;
+
+	enum SignatureRegister: uint8_t
+	{
+		// Auto-loaded:
+		RCOSC2M			= 0x00,
+		RCOSC2MA		= 0x01,
+		RCOSC32K		= 0x02,
+		RCOSC32M		= 0x03,
+		RCOSC32MA		= 0x04,
+		// Not auto-loaded:
+		LOTNUM0			= 0x08,
+		LOTNUM1			= 0x09,
+		LOTNUM2			= 0x0a,
+		LOTNUM3			= 0x0b,
+		LOTNUM4			= 0x0c,
+		LOTNUM5			= 0x0d,
+		WAFNUM			= 0x10,
+		COORDX0			= 0x12,
+		COORDX1			= 0x13,
+		COORDY0			= 0x14,
+		COORDY1			= 0x15,
+		USBCAL0			= 0x1a,
+		USBCAL1			= 0x1b,
+		RCOSC48M		= 0x1c,
+		ADCACAL0		= 0x20,
+		ADCACAL1		= 0x21,
+		ADCBCAL0		= 0x24,
+		ADCBCAL1		= 0x25,
+		TEMPSENSE0		= 0x2e,
+		TEMPSENSE1		= 0x2f,
+		DACA0OFFCAL		= 0x30,
+		DACA0GAINCAL	= 0x31,
+		DACB0OFFCAL		= 0x32,
+		DACB0GAINCAL	= 0x33,
+		DACA1OFFCAL		= 0x34,
+		DACA1GAINCAL	= 0x35,
+		DACB1OFFCAL		= 0x36,
+		DACB1GAINCAL	= 0x37,
+	};
 
 	static_assert (is_literal_type<ATXMega128A1U::Register8>::value, "Register8 must be a literal type");
 	static_assert (is_literal_type<ATXMega128A1U::Register16>::value, "Register16 must be a literal type");
@@ -175,6 +215,11 @@ class ATXMega128A1U
 	static void
 	disable_configuration_change_protection_for_spmlpm();
 
+	/**
+	 * Read register from the signature row.
+	 */
+	static uint8_t
+	read (SignatureRegister);
 };
 
 
@@ -189,6 +234,14 @@ inline void
 ATXMega128A1U::disable_configuration_change_protection_for_spmlpm()
 {
 	CCP = 0x9d;
+}
+
+
+inline uint8_t
+ATXMega128A1U::read (SignatureRegister reg)
+{
+	NVM.CMD = NVM_CMD_READ_CALIB_ROW_gc;
+	return pgm_read_byte (static_cast<uint8_t> (reg));
 }
 
 } // namespace avr
