@@ -84,7 +84,21 @@ template<class pType, size_t pSize>
 		 * Set given bit in the array to 1.
 		 */
 		constexpr void
-		set_bit (size_t bit_number);
+		set_bit_value (size_t bit_number, bool value);
+
+		/**
+		 * Return buffer casted to given type.
+		 */
+		template<class Target>
+			Target&
+			as();
+
+		/**
+		 * Return buffer casted to given type.
+		 */
+		template<class Target>
+			Target const&
+			as() const;
 
 	  private:
 		Type _data[pSize];
@@ -190,10 +204,36 @@ template<class T, size_t S>
 
 template<class T, size_t S>
 	constexpr void
-	Array<T, S>::set_bit (size_t bit_number)
+	Array<T, S>::set_bit_value (size_t bit_number, bool value)
 	{
-		_data[bit_number / sizeof (value_type)] |= bitnum<value_type> (bit_number % sizeof (value_type));
+		constexpr size_t pos = bit_number / sizeof (value_type);
+		constexpr value_type mask = static_cast<value_type> (1) << (bit_number % sizeof (value_type));
+
+		if (value)
+			_data[pos] |= mask;
+		else
+			_data[pos] &= ~mask;
 	}
+
+
+template<class T, size_t S>
+	template<class Target>
+		inline Target&
+		Array<T, S>::as()
+		{
+			static_assert (sizeof (Target) <= S * sizeof (Type), "array buffer too small for target type");
+
+			return reinterpret_cast<Target&> (*data());
+		}
+
+
+template<class T, size_t S>
+	template<class Target>
+		inline Target const&
+		Array<T, S>::as() const
+		{
+			return const_cast<Array<T, S>*> (this)->as<Target>();
+		}
 
 } // namespace avr
 } // namespace mulabs
