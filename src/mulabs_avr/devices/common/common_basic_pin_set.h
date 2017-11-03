@@ -47,7 +47,7 @@ template<class pMCU>
 
 	  public:
 		// Ctor
-		constexpr explicit
+		explicit constexpr
 		CommonBasicPinSet (AllPins pins);
 
 		/**
@@ -145,7 +145,7 @@ template<class pMCU>
 		}
 
 	  private:
-		AllPins _all_pins;
+		AllPins const	_all_pins;
 	};
 
 

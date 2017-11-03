@@ -34,7 +34,7 @@ class EEPROM256
 	class ByteProxy
 	{
 	  public:
-		constexpr explicit
+		explicit constexpr
 		ByteProxy (EEPROM256 const& eeprom, uint8_t const address):
 			_eeprom (eeprom),
 			_address (address)

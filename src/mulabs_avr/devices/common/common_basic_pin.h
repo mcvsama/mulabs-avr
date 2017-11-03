@@ -120,8 +120,8 @@ template<class pMCU>
 			signal (Integer times) const;
 
 	  protected:
-		Port	_port;
-		uint8_t	_pin_number;
+		Port const		_port;
+		uint8_t const	_pin_number;
 	};
 
 

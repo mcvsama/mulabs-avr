@@ -21,6 +21,9 @@
 #define __AVR_MCU MCU
 #undef MCU
 
+#define __AVR_USB USB
+#undef USB
+
 
 // C++ doesn't allow reinterpret_cast<> in constexpr functions, even if the result is well-defined,
 // but the reinterpret_cast<> used directly in a constexpr expression is allowed, so the only remaining

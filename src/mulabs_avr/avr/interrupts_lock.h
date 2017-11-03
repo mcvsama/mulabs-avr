@@ -29,9 +29,11 @@ class InterruptsLock
 {
   public:
 	// Ctor
+	inline
 	InterruptsLock();
 
 	// Dtor
+	inline
 	~InterruptsLock();
 
   public:
@@ -40,17 +42,19 @@ class InterruptsLock
 		synchronize (Function callback);
 
   private:
-	int _saved_interrupt_flag;
+	bool const _saved_interrupt_flag;
 };
 
 
-InterruptsLock::InterruptsLock()
+inline
+InterruptsLock::InterruptsLock():
+	_saved_interrupt_flag (get_bit<7> (SREG))
 {
-	_saved_interrupt_flag = get_bit<7> (SREG);
 	cli();
 }
 
 
+inline
 InterruptsLock::~InterruptsLock()
 {
 	set_bit_value<7> (SREG, _saved_interrupt_flag);
