@@ -32,6 +32,7 @@
 #include <mulabs_avr/devices/xmega_au/basic_port.h>
 #include <mulabs_avr/devices/xmega_au/basic_timer_01.h>
 #include <mulabs_avr/devices/xmega_au/basic_usart.h>
+#include <mulabs_avr/devices/xmega_au/basic_usb.h>
 #include <mulabs_avr/devices/xmega_au/event_system.h>
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
 #include <mulabs_avr/utility/array.h>
@@ -59,6 +60,7 @@ class ATXMega128A1U
 	using JTAG				= xmega_au::BasicJTAG<MCU>;
 	using Timer01			= xmega_au::BasicTimer01<MCU>;
 	using USART				= xmega_au::BasicUSART<MCU>;
+	using USB				= xmega_au::BasicUSB<MCU>;
 	using EventSystem		= xmega_au::EventSystem;
 	using InterruptSystem	= xmega_au::InterruptSystem;
 
@@ -147,6 +149,8 @@ class ATXMega128A1U
 	static constexpr USART		usart_e1	{ 0X0ab0 };
 	static constexpr USART		usart_f0	{ 0X0ba0 };
 	static constexpr USART		usart_f1	{ 0X0bb0 };
+
+	static constexpr USB		usb			{ 0x04c0 };
 
   public:
 	/**
