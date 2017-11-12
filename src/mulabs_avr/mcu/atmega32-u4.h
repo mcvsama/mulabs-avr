@@ -30,7 +30,7 @@
 #include <mulabs_avr/devices/mega32u4/basic_jtag.h>
 #include <mulabs_avr/utility/array.h>
 #include <mulabs_avr/utility/type_traits.h>
-#include <mulabs_avr/mcu/atmega32-u4-ports.h>
+#include <mulabs_avr/mcu/atmega32-u4-registers.h>
 
 
 namespace mulabs {
