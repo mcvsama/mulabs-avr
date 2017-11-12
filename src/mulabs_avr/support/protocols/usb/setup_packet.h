@@ -241,8 +241,6 @@ struct SetupPacket
 	Request						request;
 	// Length of the data[] array:
 	uint16_t					length;
-	// Length unspecified, as the data continues past this struct:
-	uint8_t						data[];
 } __attribute__((packed));
 
 } // namespace usb

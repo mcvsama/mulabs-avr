@@ -72,23 +72,23 @@ class Endpoint
 {
   public:
 	// Thrown when Endpoint is Bulk or Control type and has Interval value != 0.
-	class Use0ForInterval: Exception
+	class Use0ForInterval: public Exception
 	{ };
 
 	// Thrown when Endpoint is Isochronous and Interval value != 1.
-	class Use1ForInterval: Exception
+	class Use1ForInterval: public Exception
 	{ };
 
 	// Thrown when SyncType is set to anything else than NoSync for TransferType other than Isochronous.
-	class MustBeNoSync: Exception
+	class MustBeNoSync: public Exception
 	{ };
 
 	// Thrown when user tried to define default control endpoint here.
-	class ControlEndpoint0MustNotBeDefinedHere: Exception
+	class ControlEndpoint0MustNotBeDefinedHere: public Exception
 	{ };
 
 	// Thrown when endpoint index is not within range 1..15.
-	class InvalidEndpointIndex: Exception
+	class InvalidEndpointIndex: public Exception
 	{ };
 
   public:
@@ -111,7 +111,7 @@ class Interface
 {
   public:
 	// Thrown when DeviceClass is invalid (like InterfaceSpecified here).
-	class BadDeviceClass: Exception
+	class BadDeviceClass: public Exception
 	{ };
 
   public:
@@ -134,19 +134,19 @@ class Configuration
 {
   public:
 	// Thrown when configuration index is 0, which is forbidden. // TODO is it?
-	class ConfigurationIndexMustNotBe0: Exception
+	class ConfigurationIndexMustNotBe0: public Exception
 	{ };
 
 	// Thrown when interface indices are not sequentially ordered starting from 0.
-	class InvalidIndexSequence: Exception
+	class InvalidIndexSequence: public Exception
 	{ };
 
 	// Thrown when interface specified in alternate_index isn't defined.
-	class AlternateInterfaceIndexNotFound: Exception
+	class AlternateInterfaceIndexNotFound: public Exception
 	{ };
 
 	// Thrown when within single configuration there are two or more endpoints with the same index.
-	class ConflictingEndpointIndices: Exception
+	class ConflictingEndpointIndices: public Exception
 	{ };
 
   public:
@@ -168,7 +168,7 @@ class Device
 {
   public:
 	// Thrown when configuration indices are found not to be unique numbers.
-	class ConfigurationIndexNotUnique: Exception
+	class ConfigurationIndexNotUnique: public Exception
 	{ };
 
   public:

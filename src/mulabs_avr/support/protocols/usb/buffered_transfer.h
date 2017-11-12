@@ -19,10 +19,10 @@ namespace avr {
 namespace usb {
 
 /**
- * Wraps a transfer object and provides its own buffer.
+ * Adds buffer to a transfer object.
  */
 template<class pTransfer>
-	class BufferedTransfer: pTransfer
+	class BufferedTransfer: public pTransfer
 	{
 	  public:
 		using Transfer			= pTransfer;
