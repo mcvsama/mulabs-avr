@@ -63,12 +63,27 @@ template<class pMCU>
 
 		enum class Buffer
 		{
-			// No ping-pong is used. This endpoint is buffer 0:
-			_0,
-
-			// Ping-pong is used and the next endpoint is the buffer 1:
-			_1,
+			_0,	// No ping-pong is used. This endpoint is buffer 0.
+			_1,	// Ping-pong is used and the next endpoint is the buffer 1.
 		};
+
+		enum class Data
+		{
+			_0,	// DATA0 packet
+			_1,	// DATA1 packet
+		};
+
+	  protected:
+		static constexpr uint8_t kStall						= bit<7>;
+		static constexpr uint8_t kCRCError					= bit<7>;
+		static constexpr uint8_t kUnderflowOverflow			= bit<6>;
+		static constexpr uint8_t kTransactionComplete		= bit<5>;
+		static constexpr uint8_t kSetupTransactionComplete	= bit<4>;
+		static constexpr uint8_t kTransactionComplete1		= bit<4>;
+		static constexpr uint8_t kBank						= bit<3>;
+		static constexpr uint8_t kBusNack1					= bit<2>;
+		static constexpr uint8_t kBusNack0					= bit<1>;
+		static constexpr uint8_t kData						= bit<0>;
 
 	  protected:
 		// Ctor
@@ -256,10 +271,22 @@ template<class pMCU>
 		set_nack_all (Buffer, bool nack);
 
 		/**
-		 * Return 1 if next expected DATA packet is DATA1, 0 if DATA0.
+		 * Return what next packet is supposed to be (DATA0 or DATA1).
 		 */
-		uint8_t
-		next_data_packet_index() const;
+		Data
+		next_data_packet() const;
+
+		/**
+		 * Set next packet to be sent as DATA0/DATA1.
+		 */
+		void
+		set_next_data_packet (Data);
+
+		/**
+		 * Clear transaction_complete flags (both normal and setup), clear nack_all flag and clear the overflow or overflow condition.
+		 */
+		void
+		set_ready();
 
 	  protected:
 		size_t const		_base_address;
@@ -277,6 +304,9 @@ template<class pMCU>
 template<class pMCU>
 	class alignas(2) BasicUSBOutputEndpoint: public BasicUSBEndpoint<pMCU>
 	{
+	  public:
+		using Endpoint = BasicUSBEndpoint<pMCU>;
+
 	  public:
 		// Ctor
 		explicit constexpr
@@ -306,19 +336,15 @@ template<class pMCU>
 		 */
 		void
 		reset_overflow();
-
-		/**
-		 * Clear transaction_complete flags (both normal and setup), clear nack_all flag and clear the overflow
-		 * condition.
-		 */
-		void
-		set_ready();
 	};
 
 
 template<class pMCU>
 	class alignas(2) BasicUSBInputEndpoint: public BasicUSBEndpoint<pMCU>
 	{
+	  public:
+		using Endpoint = BasicUSBEndpoint<pMCU>;
+
 	  public:
 		// Ctor
 		explicit constexpr
@@ -361,13 +387,6 @@ template<class pMCU>
 		 */
 		void
 		reset_underflow();
-
-		/**
-		 * Clear transaction_complete flags (both normal and setup), clear nack_all flag and clear the underflow
-		 * condition.
-		 */
-		void
-		set_ready();
 
 		/**
 		 * Call set_transaction_size (bytes) and set_ready().
@@ -644,10 +663,35 @@ template<class M>
 
 
 template<class M>
-	inline uint8_t
-	BasicUSBEndpoint<M>::next_data_packet_index() const
+	inline auto
+	BasicUSBEndpoint<M>::next_data_packet() const -> Data
 	{
-		return this->_status.template get_bit<0>() ? 1 : 0;
+		return this->_status.template get_bit<0>() ? Data::_1 : Data::_0;
+	}
+
+
+template<class M>
+	inline void
+	BasicUSBEndpoint<M>::set_next_data_packet (Data data)
+	{
+		switch (data)
+		{
+			case Data::_0:
+				atomic_sram_clear_bit<0> (_status.ref());
+				break;
+
+			case Data::_1:
+				atomic_sram_set_bit<0> (_status.ref());
+				break;
+		}
+	}
+
+
+template<class M>
+	inline void
+	BasicUSBEndpoint<M>::set_ready()
+	{
+		atomic_sram_clear_bitmask<kUnderflowOverflow | kTransactionComplete | kTransactionComplete1 | kBusNack1 | kBusNack0> (this->_status.ref());
 	}
 
 
@@ -687,14 +731,6 @@ template<class M>
 	BasicUSBOutputEndpoint<M>::reset_overflow()
 	{
 		atomic_sram_clear_bit<6> (this->_status.ref());
-	}
-
-
-template<class M>
-	inline void
-	BasicUSBOutputEndpoint<M>::set_ready()
-	{
-		atomic_sram_clear_bitmask<bit<6> | bit<5> | bit<4> | bit<2> | bit<1>> (this->_status.ref());
 	}
 
 
@@ -755,18 +791,10 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBInputEndpoint<M>::set_ready()
-	{
-		atomic_sram_clear_bitmask<bit<6> | bit<5> | bit<4> | bit<2> | bit<1>> (this->_status.ref());
-	}
-
-
-template<class M>
-	inline void
 	BasicUSBInputEndpoint<M>::set_ready (size_t bytes)
 	{
 		set_transaction_size (bytes);
-		set_ready();
+		Endpoint::set_ready();
 	}
 
 } // namespace xmega_au
