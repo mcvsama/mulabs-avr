@@ -152,6 +152,9 @@ template<class U, class IE, class IB, class OE, class OB>
 		inline bool
 		SetupConductor<U, IE, IB, OE, OB>::handle_setup_packet (SetupPacket const& setup, ControlTransferType& transfer, Debug&& debug)
 		{
+			// By default, don't return anything:
+			transfer.set_transfer_size (0);
+
 			switch (setup.type)
 			{
 				case SetupPacket::Type::Standard:
@@ -183,15 +186,22 @@ template<class U, class IE, class IB, class OE, class OB>
 										case DescriptorType::Device:
 										{
 											debug ("    DescriptorType::Device\n");
-											transfer.buffer().template as<DeviceDescriptor>() = make_device_descriptor (_device);
-											transfer.set_transfer_size (std::min (setup.length, sizeof (DeviceDescriptor)));
+											auto const desc = make_device_descriptor (_device);
+											transfer.buffer().template as<DeviceDescriptor>() = desc;
+											transfer.set_transfer_size (std::min (setup.length, sizeof (desc)));
 											break;
 										}
 
 										case DescriptorType::Configuration:
+										{
 											debug ("    DescriptorType::Configuration\n");
-											// Return the Device descriptor and all the rest of the configuration tree in one request.
+											// A request for the configuration descriptor should return the device descriptor and all interface and endpoint
+											// descriptors in the one request. TODO?
+											auto const desc = make_configuration_descriptor (*_device.configurations.begin());
+											transfer.buffer().template as<ConfigurationDescriptor>() = desc;
+											transfer.set_transfer_size (std::min (setup.length, sizeof (desc)));
 											break;
+										}
 
 										case DescriptorType::String:
 											debug ("    DescriptorType::String\n");
@@ -213,8 +223,10 @@ template<class U, class IE, class IB, class OE, class OB>
 
 								case Type::GetConfiguration:
 									debug ("  DeviceRequest::GetConfiguration\n");
-									// TODO return to the host a byte indicating whether device is configured or not
-									// 0 means not confiugred, 1 or more indicates current configuration index.
+									// Return to the host a byte indicating whether device is configured or not
+									// 0 means not configured, other value indicates current configuration index.
+									transfer.buffer()[0] = 0;
+									transfer.set_transfer_size (1);
 									break;
 
 								case Type::ClearFeature:
