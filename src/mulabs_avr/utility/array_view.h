@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__UTILITY__ARRAY_H__INCLUDED
-#define MULABS_AVR__UTILITY__ARRAY_H__INCLUDED
+#ifndef MULABS_AVR__UTILITY__ARRAY_VIEW_H__INCLUDED
+#define MULABS_AVR__UTILITY__ARRAY_VIEW_H__INCLUDED
 
 // Standard:
 #include <stddef.h>
@@ -24,8 +24,8 @@
 namespace mulabs {
 namespace avr {
 
-template<class pValue, size_t pSize>
-	class Array
+template<class pValue>
+	class ArrayView
 	{
 	  public:
 		typedef pValue				Value;
@@ -39,10 +39,22 @@ template<class pValue, size_t pSize>
 		typedef value_type*			pointer;
 		typedef value_type const*	const_pointer;
 
+		// Thrown by as() method.
+		class BufferTooSmall
+		{ };
+
 	  public:
-		/*
-		 * These methods implement std::array() functionality.
-		 */
+		// Ctor
+		constexpr
+		ArrayView() = default;
+
+		// Ctor
+		constexpr
+		ArrayView (ArrayView const&) = default;
+
+		// Ctor
+		constexpr
+		ArrayView (Value const* data, size_t length);
 
 		constexpr reference
 		operator[] (size_type pos);
@@ -71,11 +83,17 @@ template<class pValue, size_t pSize>
 		constexpr bool
 		empty() const;
 
-		static constexpr size_type
-		size();
+		constexpr size_type
+		size() const;
 
-		static constexpr size_type
-		max_size();
+		constexpr size_type
+		max_size() const;
+
+		constexpr void
+		remove_prefix (size_type n);
+
+		constexpr void
+		remove_suffix (size_type n);
 
 		/**
 		 * Fill array with given value.
@@ -104,110 +122,135 @@ template<class pValue, size_t pSize>
 			as() const;
 
 	  private:
-		Value _data[pSize];
+		Value const*	_data	= nullptr;
+		size_t			_size	= 0;
 	};
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::reference
-	Array<V, S>::operator[] (size_type pos)
+template<class V>
+	constexpr
+	ArrayView<V>::ArrayView (Value const* data, size_t size):
+		_data (data),
+		_size (size)
+	{ }
+
+
+template<class V>
+	constexpr typename ArrayView<V>::reference
+	ArrayView<V>::operator[] (size_type pos)
 	{
 		return _data[pos];
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::const_reference
-	Array<V, S>::operator[] (size_type pos) const
+template<class V>
+	constexpr typename ArrayView<V>::const_reference
+	ArrayView<V>::operator[] (size_type pos) const
 	{
 		return _data[pos];
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::reference
-	Array<V, S>::front()
+template<class V>
+	constexpr typename ArrayView<V>::reference
+	ArrayView<V>::front()
 	{
 		return _data[0];
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::const_reference
-	Array<V, S>::front() const
+template<class V>
+	constexpr typename ArrayView<V>::const_reference
+	ArrayView<V>::front() const
 	{
 		return _data[0];
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::reference
-	Array<V, S>::back()
+template<class V>
+	constexpr typename ArrayView<V>::reference
+	ArrayView<V>::back()
 	{
 		return _data[size() - 1];
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::const_reference
-	Array<V, S>::back() const
+template<class V>
+	constexpr typename ArrayView<V>::const_reference
+	ArrayView<V>::back() const
 	{
 		return _data[size() - 1];
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::pointer
-	Array<V, S>::data()
+template<class V>
+	constexpr typename ArrayView<V>::pointer
+	ArrayView<V>::data()
 	{
 		return _data;
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::const_pointer
-	Array<V, S>::data() const
+template<class V>
+	constexpr typename ArrayView<V>::const_pointer
+	ArrayView<V>::data() const
 	{
 		return _data;
 	}
 
 
-template<class V, size_t S>
+template<class V>
 	constexpr bool
-	Array<V, S>::empty() const
+	ArrayView<V>::empty() const
 	{
 		return size() == 0;
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::size_type
-	Array<V, S>::size()
+template<class V>
+	constexpr typename ArrayView<V>::size_type
+	ArrayView<V>::size() const
 	{
-		return S;
+		return _size;
 	}
 
 
-template<class V, size_t S>
-	constexpr typename Array<V, S>::size_type
-	Array<V, S>::max_size()
+template<class V>
+	constexpr typename ArrayView<V>::size_type
+	ArrayView<V>::max_size() const
 	{
-		return S;
+		return _size;
 	}
 
 
-template<class V, size_t S>
+template<class V>
 	constexpr void
-	Array<V, S>::fill (const_reference value)
+	ArrayView<V>::remove_prefix (size_type n)
+	{
+		_data += n;
+	}
+
+
+template<class V>
+	constexpr void
+	ArrayView<V>::remove_suffix (size_type n)
+	{
+		_size -= n;
+	}
+
+
+template<class V>
+	constexpr void
+	ArrayView<V>::fill (const_reference value)
 	{
 		for (size_type i = 0; i < size(); ++i)
 			_data[i] = value;
 	}
 
 
-template<class V, size_t S>
+template<class V>
 	constexpr void
-	Array<V, S>::set_bit_value (size_t bit_number, bool value)
+	ArrayView<V>::set_bit_value (size_t bit_number, bool value)
 	{
 		constexpr size_t pos = bit_number / sizeof (value_type);
 		constexpr value_type mask = static_cast<value_type> (1) << (bit_number % sizeof (value_type));
@@ -219,23 +262,24 @@ template<class V, size_t S>
 	}
 
 
-template<class V, size_t S>
+template<class V>
 	template<class Target>
 		constexpr Target&
-		Array<V, S>::as()
+		ArrayView<V>::as()
 		{
-			static_assert (sizeof (Target) <= S * sizeof (Value), "array buffer too small for target type");
+			if (sizeof (Target) <= size() * sizeof (Value))
+				throw BufferTooSmall();
 
 			return reinterpret_cast<Target&> (*data());
 		}
 
 
-template<class V, size_t S>
+template<class V>
 	template<class Target>
 		constexpr Target const&
-		Array<V, S>::as() const
+		ArrayView<V>::as() const
 		{
-			return const_cast<Array<V, S>*> (this)->as<Target>();
+			return const_cast<ArrayView<V>*> (this)->as<Target>();
 		}
 
 } // namespace avr
