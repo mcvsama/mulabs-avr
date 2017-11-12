@@ -18,6 +18,36 @@ namespace mulabs {
 namespace avr {
 namespace std {
 
+template<class T, T pValue>
+	struct integral_constant
+	{
+		using value_type	= T;
+		using type			= integral_constant<T, pValue>;
+
+		static constexpr T value = pValue;
+
+		constexpr
+		operator value_type() const
+		{
+			return value;
+		}
+
+		constexpr value_type
+		operator()() const
+		{
+			return value;
+		}
+	};
+
+
+template<class T, T pValue>
+	constexpr T integral_constant<T, pValue>::value;
+
+
+using true_type		= integral_constant<bool, true>;
+using false_type	= integral_constant<bool, false>;
+
+
 template<class T>
 	struct remove_reference
 	{
@@ -41,6 +71,20 @@ template<class T>
 
 template<class T>
 	using remove_reference_t = typename remove_reference<T>::type;
+
+
+template<class>
+	struct is_lvalue_reference: public false_type
+	{ };
+
+
+template<class T>
+	struct is_lvalue_reference<T&>: public true_type
+	{ };
+
+
+template<class T>
+	constexpr bool is_lvalue_reference_v = is_lvalue_reference<T>::value;
 
 } // namespace std
 } // namespace avr

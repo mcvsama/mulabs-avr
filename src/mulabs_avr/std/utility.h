@@ -23,10 +23,38 @@ namespace avr {
 namespace std {
 
 template<class T>
-    constexpr typename std::remove_reference<T>::type&&
+	constexpr T&&
+	forward (remove_reference_t<T>& value) noexcept
+	{
+		return static_cast<T&&> (value);
+	}
+
+
+template<class T>
+	constexpr T&&
+	forward (remove_reference_t<T>&& value) noexcept
+	{
+		static_assert (!is_lvalue_reference_v<T>, "template argument substituting T is an lvalue reference type");
+
+		return static_cast<T&&> (value);
+	}
+
+
+template<class T>
+    constexpr remove_reference_t<T>&&
     move (T&& t) noexcept
     {
-		return static_cast<typename std::remove_reference<T>::type&&> (t);
+		return static_cast<remove_reference_t<T>&&> (t);
+	}
+
+
+template<class T, class U = T>
+	inline T
+	exchange (T& obj, U&& new_val)
+	{
+		T old_val = move (obj);
+		obj = forward<U> (new_val);
+		return old_val;
 	}
 
 } // namespace std

@@ -65,6 +65,81 @@ template<class Iterator, class Predicate>
 		return true;
 	}
 
+
+template<class T>
+	constexpr T const&
+	min (const T& a, const T& b)
+	{
+		if (b < a)
+			return b;
+		return a;
+	}
+
+
+template<class T, class Compare>
+	constexpr T const&
+	min (const T& a, const T& b, Compare comp)
+	{
+		if (comp (b, a))
+			return b;
+		return a;
+	}
+
+
+template<class T, class Compare>
+	constexpr T const&
+	max (const T& a, const T& b, Compare comp)
+	{
+		if (comp (a, b))
+			return b;
+		return a;
+	}
+
+
+template<class T>
+	constexpr T const&
+	max (const T& a, const T& b)
+	{
+		if (a < b)
+			return b;
+		return a;
+	}
+
+
+#if 0
+Disabled until min_element/max_element is implemented
+template<class T>
+	constexpr T
+	min (initializer_list<T> list)
+	{
+		return *min_element (list.begin(), list.end());
+	}
+
+
+template<class T, class Compare>
+	constexpr T
+	min (initializer_list<T> list, Compare comp)
+	{
+		return *min_element (list.begin(), list.end(), comp);
+	}
+
+
+template<class T>
+	constexpr T
+	max (initializer_list<T> list)
+	{
+		return *max_element (list.begin(), list.end());
+	}
+
+
+template<class T, class Compare>
+	constexpr T
+	max (initializer_list<T> list, Compare comp)
+	{
+		return *max_element (list.begin(), list.end(), comp);
+	}
+#endif
+
 } // namespace std
 } // namespace avr
 } // namespace mulabs
