@@ -11,6 +11,27 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
+// Standard:
+#include <stdio.h>
+
+
+namespace std {
+
+struct type_info;
+
+} // namespace std
+
+namespace __cxxabiv1 {
+
+struct __class_type_info
+{
+	virtual void unused()
+	{ }
+} ti;
+
+} // namespace __cxxabiv1
+
+
 __extension__ typedef int __guard __attribute__((mode (__DI__)));
 
 
@@ -35,5 +56,19 @@ __cxa_guard_release (__guard* g)
 
 extern "C" void
 __cxa_guard_abort (__guard*)
+{ }
+
+
+extern "C" void*
+__cxa_allocate_exception ([[maybe_unused]] size_t thrown_size) noexcept
+{
+	// If memory can not be allocated, call std::terminate().
+	while (true)
+		continue;
+}
+
+
+extern "C" void
+__cxa_throw ([[maybe_unused]] void* thrown_exception, [[maybe_unused]] struct std::type_info* tinfo, [[maybe_unused]] void (*dest)(void*))
 { }
 
