@@ -18,6 +18,7 @@
 #include <mulabs_avr/std/algorithm.h>
 #include <mulabs_avr/std/initializer_list.h>
 #include <mulabs_avr/support/protocols/usb/types.h>
+#include <mulabs_avr/utility/array.h>
 #include <mulabs_avr/utility/constring.h>
 #include <mulabs_avr/utility/strong_type.h>
 
@@ -133,7 +134,7 @@ class Interface
 class Configuration
 {
   public:
-	// Thrown when configuration index is 0, which is forbidden. // TODO is it?
+	// Thrown when configuration index is 0, which is forbidden.
 	class ConfigurationIndexMustNotBe0: public Exception
 	{ };
 
@@ -183,11 +184,8 @@ class Device
 	constexpr uint8_t
 	maximum_endpoint_id() const;
 
-	// TODO
-#if 0
-	constexpr String
-	string_for_descriptor (uint8_t descriptor_index) const;
-#endif
+	constexpr size_t
+	max_string_index() const;
 
   public:
 	USBVersion								usb_version;
@@ -202,9 +200,37 @@ class Device
 	Serial									serial;
 	MaxPacketSize							max_packet_size_0;
 	std::initializer_list<Configuration>	configurations;
-	// String indices are offset by 1, so that string for string-descriptor 1 is at strings[0], etc:
-	std::initializer_list<String>			strings;
 };
+
+
+template<Device const& pDevice>
+	class DeviceStrings
+	{
+	  public:
+		static constexpr Device const& device = pDevice;
+
+		using StringsArray = Array<String, device.max_string_index()>;
+
+	  public:
+		// Ctor
+		constexpr
+		DeviceStrings();
+
+		constexpr String
+		string_for_index (uint8_t descriptor_index) const;
+
+		constexpr uint8_t
+		index_for_string (String) const;
+
+	  private:
+		constexpr StringsArray
+		collect_strings();
+
+	  public:
+		// String indices are offset by 1, so that string for string-descriptor 1 is at strings[0], etc.
+		// Better use string_for_index() to avoid confusion.
+		StringsArray strings;
+	};
 
 
 constexpr
@@ -369,13 +395,68 @@ Device::maximum_endpoint_id() const
 }
 
 
-#if 0
-constexpr String
-Device::string_for_descriptor (uint8_t descriptor_index) const
+constexpr size_t
+Device::max_string_index() const
 {
-	return strings[descriptor_index - 1];
+	// manufacturer, product, serial + each configuration's description:
+	size_t n = 3 + configurations.size();
+
+	// Add interfaces' descriptions:
+	for (auto const& configuration: configurations)
+		n += configuration.interfaces.size();
+
+	return n;
 }
-#endif
+
+
+template<Device const& D>
+	constexpr
+	DeviceStrings<D>::DeviceStrings():
+		strings (collect_strings())
+	{ }
+
+
+template<Device const& D>
+	constexpr String
+	DeviceStrings<D>::string_for_index(uint8_t descriptor_index) const
+	{
+		return strings[descriptor_index - 1];
+	}
+
+
+template<Device const& D>
+	constexpr auto
+	DeviceStrings<D>::collect_strings() -> StringsArray
+	{
+		StringsArray result;
+		size_t i = 0;
+
+		result[i++] = *device.manufacturer;
+		result[i++] = *device.product;
+		result[i++] = *device.serial;
+
+		for (auto const& configuration: device.configurations)
+		{
+			result[i++] = configuration.description;
+
+			for (auto const& interface: configuration.interfaces)
+				result[i++] = interface.description;
+		}
+
+		return result;
+	}
+
+
+template<Device const& D>
+	constexpr uint8_t
+	DeviceStrings<D>::index_for_string (String string) const
+	{
+		for (uint8_t i = 0; i < string.size(); ++i)
+			if (strings[i] == string)
+				return i;
+
+		return 0;
+	}
 
 } // namespace usb
 } // namespace avr

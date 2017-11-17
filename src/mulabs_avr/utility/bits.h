@@ -67,6 +67,19 @@ template<uint8_t Bit, class R>
 		return reg & (static_cast<R> (1) << Bit);
 	}
 
+
+/**
+ * Swap MSB-LSB bits in a byte.
+ */
+constexpr uint8_t
+reverse_bits (uint8_t byte)
+{
+    byte = ((byte >> 1) & 0x55) | ((byte << 1) & 0xaa);
+    byte = ((byte >> 2) & 0x33) | ((byte << 2) & 0xcc);
+    byte = ((byte >> 4) & 0x0f) | ((byte << 4) & 0xf0);
+    return byte;
+}
+
 } // namespace avr
 } // namespace mulabs
 

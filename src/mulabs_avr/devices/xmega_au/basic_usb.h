@@ -754,7 +754,7 @@ template<class M>
 			InterruptFlag::Overflow,
 			InterruptFlag::Stall
 		);
-	};
+	}
 
 
 template<class M>

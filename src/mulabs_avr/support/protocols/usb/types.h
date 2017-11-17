@@ -50,6 +50,11 @@ enum class DeviceClass: uint8_t
 	VendorSpecified		= 0xff,
 };
 
+enum class LanguageID: uint16_t
+{
+	English				= 0x0409,
+};
+
 } // namespace usb
 } // namespace avr
 } // namespace mulabs

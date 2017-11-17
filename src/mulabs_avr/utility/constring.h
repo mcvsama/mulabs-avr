@@ -31,9 +31,22 @@ template<class pChar>
 
 	  public:
 		// Ctor
+		constexpr
+		Constring();
+
+		// Ctor
+		template<size_t N>
+			constexpr
+			Constring (Constring const& other);
+
+		// Ctor
 		template<size_t N>
 			constexpr
 			Constring (Char const (&data)[N]);
+
+		template<size_t N>
+			constexpr Constring const&
+			operator= (Char const (&data)[N]);
 
 		constexpr Char const*
 		data() const;
@@ -51,12 +64,40 @@ template<class pChar>
 
 
 template<class C>
+	constexpr
+	Constring<C>::Constring():
+		_data (nullptr),
+		_size (0)
+	{ }
+
+
+template<class C>
+	template<size_t N>
+		constexpr
+		Constring<C>::Constring (Constring const& other):
+			_data (other._data),
+			_size (other._size)
+		{ }
+
+
+template<class C>
 	template<size_t N>
 		constexpr
 		Constring<C>::Constring (Char const (&data)[N]):
 			_data (data),
 			_size (N - 1) // -1 is not to count the "\0" from the string literal
 		{ }
+
+
+template<class C>
+	template<size_t N>
+		constexpr Constring<C> const&
+		Constring<C>::operator= (Char const (&data)[N])
+		{
+			_data = data;
+			_size = N - 1;
+			return *this;
+		}
 
 
 template<class C>
@@ -79,9 +120,30 @@ template<class C>
 	constexpr typename Constring<C>::Char
 	Constring<C>::operator[] (size_t n) const
 	{
-		return n < _size
-			? _data[n]
-			: throw OutOfRange();
+		//if (n >= _size)
+		//	throw OutOfRange();
+
+		return _data[n];
+	}
+
+
+/*
+ * Global functions
+ */
+
+
+template<class C>
+	constexpr bool
+	operator== (Constring<C> const& a, Constring<C> const& b)
+	{
+		if (a.size() != b.size())
+			return false;
+
+		for (size_t i = 0; i < a.size(); ++i)
+			if (a[i] != b[i])
+				return false;
+
+		return true;
 	}
 
 } // namespace avr

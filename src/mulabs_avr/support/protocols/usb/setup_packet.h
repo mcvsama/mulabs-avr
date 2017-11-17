@@ -75,7 +75,6 @@ struct SetupPacket
 		struct GetStatus
 		{
 			uint16_t			reserved[2];
-			// SetupPacket::data is two-byte status.
 		} __attribute__((packed));
 
 		struct SetClearFeature
@@ -95,7 +94,6 @@ struct SetupPacket
 			uint8_t				index;
 			DescriptorType		type;
 			uint16_t			language_id;
-			// SetupPacket::data is the descriptor.
 		} __attribute__((packed));
 
 		struct SetConfiguration
@@ -107,7 +105,6 @@ struct SetupPacket
 		struct GetConfiguration
 		{
 			uint16_t			reserved[2];
-			// SetupPacket::data is 1-byte configuration value.
 		} __attribute__((packed));
 
 	  public:
@@ -239,7 +236,7 @@ struct SetupPacket
 	Type						type:2;
 	TransferDirection			transfer_direction:1;
 	Request						request;
-	// Length of the data[] array:
+	// Length of the data stage:
 	uint16_t					length;
 } __attribute__((packed));
 

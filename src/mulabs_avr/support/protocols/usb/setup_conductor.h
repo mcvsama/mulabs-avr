@@ -29,21 +29,22 @@ namespace usb {
 /**
  * This class handles the setup packets on the USB bus and replies according to the provided USB device definition.
  */
-template<class pUSBModule, class pInputEndpoint, class pInputBuffer, class pOutputEndpoint, class pOutputBuffer>
+template<class pDeviceStrings, class pUSBModule, class pInputEndpoint, class pInputBuffer, class pOutputEndpoint, class pOutputBuffer>
 	class SetupConductor
 	{
 	  public:
+		using DeviceStringsType		= pDeviceStrings;
 		using USBModule				= pUSBModule;
 		using InputEndpoint			= pInputEndpoint;
 		using InputBuffer			= pInputBuffer;
 		using OutputEndpoint		= pOutputEndpoint;
 		using OutputBuffer			= pOutputBuffer;
-		using ControlTransferType	= ControlTransfer<InputEndpoint, InputBuffer, OutputEndpoint, OutputBuffer, 64>; // TODO test with 8; TODO user-configurable buffer-size
+		using ControlTransferType	= ControlTransfer<InputEndpoint, InputBuffer, OutputEndpoint, OutputBuffer, 64>; // TODO user-configurable buffer-size
 
 	  public:
 		// Ctor
 		explicit constexpr
-		SetupConductor (Device const& device, USBModule&, InputEndpoint&, InputBuffer&, OutputEndpoint&, OutputBuffer&);
+		SetupConductor (Device const& device, DeviceStringsType const&, USBModule&, InputEndpoint&, InputBuffer&, OutputEndpoint&, OutputBuffer&);
 
 		/**
 		 * Check endpoints and handle setup packets as needed.
@@ -67,24 +68,27 @@ template<class pUSBModule, class pInputEndpoint, class pInputBuffer, class pOutp
 			handle_setup_packet (SetupPacket const&, ControlTransferType&, Debug&& debug);
 
 	  private:
-		Device const&		_device;
-		USBModule&			_usb;
-		InputEndpoint&		_input_endpoint;
-		InputBuffer&		_input_buffer;
-		OutputEndpoint&		_output_endpoint;
-		OutputBuffer&		_output_buffer;
-		uint8_t				_address_to_set		{ 0 };
+		Device const&				_device;
+		DeviceStringsType const&	_device_strings;
+		USBModule&					_usb;
+		InputEndpoint&				_input_endpoint;
+		InputBuffer&				_input_buffer;
+		OutputEndpoint&				_output_endpoint;
+		OutputBuffer&				_output_buffer;
+		uint8_t						_address_to_set		{ 0 };
 		BufferedTransfer<ControlTransferType>
-							_transfer			{ _input_endpoint, _input_buffer, _output_endpoint, _output_buffer };
+									_transfer			{ _input_endpoint, _input_buffer, _output_endpoint, _output_buffer };
 	};
 
 
-template<class U, class IE, class IB, class OE, class OB>
+template<class DS, class U, class IE, class IB, class OE, class OB>
 	constexpr
-	SetupConductor<U, IE, IB, OE, OB>::SetupConductor (Device const& device, USBModule& usb,
-													   InputEndpoint& input_endpoint, InputBuffer& input_buffer,
-													   OutputEndpoint& output_endpoint, OutputBuffer& output_buffer):
+	SetupConductor<DS, U, IE, IB, OE, OB>::SetupConductor (Device const& device, DeviceStringsType const& device_strings,
+														   USBModule& usb,
+														   InputEndpoint& input_endpoint, InputBuffer& input_buffer,
+														   OutputEndpoint& output_endpoint, OutputBuffer& output_buffer):
 		_device (device),
+		_device_strings (device_strings),
 		_usb (usb),
 		_input_endpoint (input_endpoint),
 		_input_buffer (input_buffer),
@@ -93,10 +97,10 @@ template<class U, class IE, class IB, class OE, class OB>
 	{ }
 
 
-template<class U, class IE, class IB, class OE, class OB>
+template<class DS, class U, class IE, class IB, class OE, class OB>
 	template<class Debug>
 		inline void
-		SetupConductor<U, IE, IB, OE, OB>::handle_interrupt (Debug&& debug)
+		SetupConductor<DS, U, IE, IB, OE, OB>::handle_interrupt (Debug&& debug)
 		{
 			if (_input_endpoint.is_stalled() || _output_endpoint.is_stalled())
 			{
@@ -138,19 +142,19 @@ template<class U, class IE, class IB, class OE, class OB>
 		}
 
 
-template<class U, class IE, class IB, class OE, class OB>
+template<class DS, class U, class IE, class IB, class OE, class OB>
 	inline void
-	SetupConductor<U, IE, IB, OE, OB>::reset() noexcept
+	SetupConductor<DS, U, IE, IB, OE, OB>::reset() noexcept
 	{
 		_address_to_set = 0;
 		_transfer.reset();
 	}
 
 
-template<class U, class IE, class IB, class OE, class OB>
+template<class DS, class U, class IE, class IB, class OE, class OB>
 	template<class Debug>
 		inline bool
-		SetupConductor<U, IE, IB, OE, OB>::handle_setup_packet (SetupPacket const& setup, ControlTransferType& transfer, Debug&& debug)
+		SetupConductor<DS, U, IE, IB, OE, OB>::handle_setup_packet (SetupPacket const& setup, ControlTransferType& transfer, Debug&& debug)
 		{
 			// By default, don't return anything:
 			transfer.set_transfer_size (0);
@@ -186,7 +190,7 @@ template<class U, class IE, class IB, class OE, class OB>
 										case DescriptorType::Device:
 										{
 											debug ("    DescriptorType::Device\n");
-											auto const desc = make_device_descriptor (_device);
+											auto const desc = make_device_descriptor (_device, _device_strings);
 											transfer.buffer().template as<DeviceDescriptor>() = desc;
 											transfer.set_transfer_size (std::min (setup.length, sizeof (desc)));
 											break;
@@ -197,15 +201,32 @@ template<class U, class IE, class IB, class OE, class OB>
 											debug ("    DescriptorType::Configuration\n");
 											// A request for the configuration descriptor should return the device descriptor and all interface and endpoint
 											// descriptors in the one request. TODO?
-											auto const desc = make_configuration_descriptor (*_device.configurations.begin());
+											auto const desc = make_configuration_descriptor (*_device.configurations.begin(), _device_strings);
 											transfer.buffer().template as<ConfigurationDescriptor>() = desc;
 											transfer.set_transfer_size (std::min (setup.length, sizeof (desc)));
 											break;
 										}
 
 										case DescriptorType::String:
+										{
 											debug ("    DescriptorType::String\n");
+											auto const index = setup.request.device.get_descriptor.index;
+
+											if (index == 0)
+											{
+												auto& descriptor = transfer.buffer().template as<StringDescriptorZero>();
+												auto const actual_size = make_string_descriptor_0 (descriptor, transfer.buffer().size(), LanguageID::English);
+												transfer.set_transfer_size (actual_size);
+											}
+											else
+											{
+												auto const& string = _device_strings.string_for_index (setup.request.device.get_descriptor.index);
+												auto& descriptor = transfer.buffer().template as<StringDescriptor>();
+												auto const actual_size = make_string_descriptor (descriptor, transfer.buffer().size(), string);
+												transfer.set_transfer_size (actual_size);
+											}
 											break;
+										}
 
 										case DescriptorType::Interface:
 											debug ("    DescriptorType::Interface\n");
