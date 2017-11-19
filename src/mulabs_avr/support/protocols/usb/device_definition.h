@@ -176,7 +176,11 @@ class Device
 {
   public:
 	// Thrown when configuration indices are found not to be unique numbers.
-	class ConfigurationIndexNotUnique: public Exception
+	class ConfigurationValueNotUnique: public Exception
+	{ };
+
+	// Thrown when configuration given by value can't be found.
+	class ConfigurationNotFound: public Exception
 	{ };
 
   public:
@@ -199,10 +203,16 @@ class Device
 
 	/**
 	 * Return configuration descriptor by index.
-	 * Valid indices are 1…N.
+	 * Valid indices are 0…N-1.
 	 */
 	constexpr Configuration
 	configuration_for_index (uint8_t) const;
+
+	/**
+	 * Return configuration descriptor by its configuration-value.
+	 */
+	constexpr Configuration
+	configuration_for_value (ConfigurationValue) const;
 
   public:
 	USBVersion								usb_version;
@@ -392,7 +402,7 @@ Device::Device (USBVersion usb_version, VendorID vendor_id, ProductID product_id
 				++num;
 
 		if (num > 1)
-			throw ConfigurationIndexNotUnique();
+			throw ConfigurationValueNotUnique();
 	}
 }
 
@@ -433,6 +443,29 @@ Device::configuration_for_index (uint8_t index) const
 		return *(configurations.begin() + index);
 	else
 		throw OutOfBounds();
+}
+
+
+constexpr Configuration
+Device::configuration_for_value (ConfigurationValue value) const
+{
+	// This 'found' bool is only to make GCC happy, because it incorrectly assumes that the throw expression will always be executed and therefore says it can't
+	// compile this constexpr function.
+	bool found = false;
+
+	for (uint8_t i = 0; i < configurations.size(); ++i)
+	{
+		Configuration const* const conf = configurations.begin() + i;
+
+		if (*conf->value == *value)
+		{
+			found = true;
+			return *conf;
+		}
+	}
+
+	if (!found)
+		throw ConfigurationNotFound();
 }
 
 

@@ -19,7 +19,7 @@
 #include <mulabs_avr/support/protocols/usb/control_transfer.h>
 #include <mulabs_avr/support/protocols/usb/device_definition.h>
 #include <mulabs_avr/support/protocols/usb/descriptors.h>
-#include <mulabs_avr/utility/array_view.h>
+#include <mulabs_avr/utility/span.h>
 
 
 namespace mulabs {
@@ -114,7 +114,7 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 				// TODO stall the endpoint and report to the user
 			}
 
-			auto on_setup = [&] (SetupPacket const& setup, [[maybe_unused]] ArrayView<uint8_t> output_data) {
+			auto on_setup = [&] (SetupPacket const& setup, [[maybe_unused]] Span<uint8_t> output_data) {
 				// XXX remove debug
 				debug ("  Got setup packet:\n");
 				debug ("    transfer_direction  %u  %s\n", setup.transfer_direction,
@@ -201,8 +201,7 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 											debug ("    DescriptorType::Configuration\n");
 											// A request for the configuration descriptor should return the device descriptor and all interface and endpoint
 											// descriptors in one request.
-											Configuration conf = _device.configuration_for_index (setup.request.device.get_descriptor.index);
-											size_t size = make_full_configuration_descriptor (transfer.buffer(), conf, _device_strings);
+											size_t size = make_full_configuration_descriptor (transfer.buffer(), _device, setup.request.device.get_descriptor.index, _device_strings);
 											transfer.set_transfer_size (std::min (setup.length, size));
 											break;
 										}

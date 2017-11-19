@@ -18,6 +18,13 @@ namespace mulabs {
 namespace avr {
 namespace std {
 
+/*
+ * std::integral_constant
+ * std::true_type
+ * std::false_type
+ */
+
+
 template<class T, T pValue>
 	struct integral_constant
 	{
@@ -48,6 +55,12 @@ using true_type		= integral_constant<bool, true>;
 using false_type	= integral_constant<bool, false>;
 
 
+/*
+ * std::remove_reference
+ * std::remove_reference_t
+ */
+
+
 template<class T>
 	struct remove_reference
 	{
@@ -73,6 +86,12 @@ template<class T>
 	using remove_reference_t = typename remove_reference<T>::type;
 
 
+/*
+ * std::is_lvalue_reference
+ * std::is_lvalue_reference_v
+ */
+
+
 template<class>
 	struct is_lvalue_reference: public false_type
 	{ };
@@ -85,6 +104,40 @@ template<class T>
 
 template<class T>
 	constexpr bool is_lvalue_reference_v = is_lvalue_reference<T>::value;
+
+
+/*
+ * std::is_const
+ * std::is_const_v
+ */
+
+
+template<class>
+	struct is_const: public false_type
+	{ };
+
+
+template<class T>
+	struct is_const<T const>: public true_type
+	{ };
+
+
+template <class T>
+	constexpr bool is_const_v = is_const<T>::value;
+
+
+/*
+ * std::is_literal_type
+ */
+
+
+template<class T>
+	struct is_literal_type: public integral_constant<bool, __is_literal_type (T)>
+	{ };
+
+
+template <class T>
+	constexpr bool is_literal_type_v = is_literal_type<T>::value;
 
 } // namespace std
 } // namespace avr

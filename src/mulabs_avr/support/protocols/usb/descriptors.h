@@ -17,7 +17,7 @@
 // Mulabs:
 #include <mulabs_avr/support/protocols/usb/device_definition.h>
 #include <mulabs_avr/support/protocols/usb/types.h>
-#include <mulabs_avr/utility/array_view.h>
+#include <mulabs_avr/utility/span.h>
 #include <mulabs_avr/utility/strong_type.h>
 
 
@@ -37,6 +37,13 @@ enum class DescriptorType: uint8_t
 	Endpoint			= 0x05,
 	BOS					= 0x0f,
 };
+
+
+/**
+ * Thrown when incorrect endpoint number is given.
+ */
+class InvalidEndpointNumber
+{ };
 
 
 /**
@@ -85,7 +92,7 @@ struct ConfigurationDescriptor
 	 * Return value for the 'flags' field.
 	 */
 	static constexpr uint8_t
-	make_flags (SelfPowered, RemoteWakeup);
+	make_flags (USBVersion, SelfPowered, RemoteWakeup);
 } __attribute__((packed));
 
 static_assert (sizeof (ConfigurationDescriptor) == 9);
@@ -117,6 +124,19 @@ struct EndpointDescriptor
 	uint8_t						attributes					= 0x00;
 	MaxPacketSize::Value		max_packet_size				= 0;
 	Interval::Value				interval					= 0;
+
+  public:
+	/**
+	 * Return value suitable for the 'address' field.
+	 */
+	static constexpr uint8_t
+	make_address (Index, Direction);
+
+	/**
+	 * Return value suitable for the 'attributes' field.
+	 */
+	static constexpr uint8_t
+	make_attributes (TransferType, SyncType, UsageType);
 } __attribute__((packed));
 
 static_assert (sizeof (EndpointDescriptor) == 7);
@@ -145,15 +165,44 @@ static_assert (sizeof (StringDescriptor) == 2);
 
 
 constexpr uint8_t
-ConfigurationDescriptor::make_flags (SelfPowered self_powered, RemoteWakeup remote_wakeup)
+ConfigurationDescriptor::make_flags (USBVersion usb_version, SelfPowered self_powered, RemoteWakeup remote_wakeup)
 {
-	uint8_t result = 0b10000000;
+	uint8_t result = 0;
+
+	if (usb_version >= USBVersion::_1_1)
+		result = 0b10000000;
 
 	if (*self_powered)
 		set_bit<6> (result);
 
 	if (*remote_wakeup)
 		set_bit<5> (result);
+
+	return result;
+}
+
+
+constexpr uint8_t
+EndpointDescriptor::make_address (Index endpoint_number, Direction direction)
+{
+	if (*endpoint_number >= 16)
+		throw InvalidEndpointNumber();
+
+	return (*endpoint_number << 0)
+		 | (static_cast<uint8_t> (direction) << 7);
+}
+
+
+constexpr uint8_t
+EndpointDescriptor::make_attributes (TransferType transfer_type, SyncType sync_type, UsageType usage_type)
+{
+	uint8_t result = static_cast<uint8_t> (transfer_type) << 0;
+
+	if (transfer_type == TransferType::Isochronous)
+	{
+		result |= static_cast<uint8_t> (sync_type) << 2;
+		result |= static_cast<uint8_t> (usage_type) << 4;
+	}
 
 	return result;
 }
@@ -193,14 +242,14 @@ template<class pDeviceStrings>
  */
 template<class pDeviceStrings>
 	constexpr ConfigurationDescriptor
-	make_configuration_descriptor (Configuration const& configuration, pDeviceStrings const& strings)
+	make_configuration_descriptor (Device const& device, Configuration const& configuration, pDeviceStrings const& strings)
 	{
 		ConfigurationDescriptor descriptor;
 		descriptor.total_length = descriptor.length;
 		descriptor.number_of_interfaces = configuration.interfaces.size();
 		descriptor.configuration_value = *configuration.value;
 		descriptor.description_index = strings.index_for_string (configuration.description);
-		descriptor.flags = descriptor.make_flags (configuration.self_powered, configuration.remote_wakeup);
+		descriptor.flags = descriptor.make_flags (device.usb_version, configuration.self_powered, configuration.remote_wakeup);
 		descriptor.max_power_2_milli_amps = *configuration.max_power_milli_amps / 2;
 		return descriptor;
 	}
@@ -226,12 +275,10 @@ constexpr EndpointDescriptor
 make_endpoint_descriptor ([[maybe_unused]] Endpoint const& endpoint)
 {
 	EndpointDescriptor descriptor;
-#if 0
-	descriptor.address... TODO
-	descriptor.attributes
-	descriptor.max_packet_size
-	descriptor.interval
-#endif
+	descriptor.address = EndpointDescriptor::make_address (endpoint.index, endpoint.direction);
+	descriptor.attributes = EndpointDescriptor::make_attributes (endpoint.transfer_type, endpoint.sync_type, endpoint.usage_type);
+	descriptor.max_packet_size = *endpoint.max_packet_size;
+	descriptor.interval = *endpoint.interval;
 	return descriptor;
 }
 
@@ -240,34 +287,35 @@ make_endpoint_descriptor ([[maybe_unused]] Endpoint const& endpoint)
  * Make a configuration descriptor and also the rest of the hierarchy for that configuration.
  * Put it all into a buffer.
  */
-// TODO rename ArrayView to Span and make it read-write
 template<class pDeviceStrings>
 	[[nodiscard]]
 	constexpr size_t
-	make_full_configuration_descriptor (ArrayView<uint8_t> target_buffer, Configuration const& configuration, pDeviceStrings const& strings)
+	make_full_configuration_descriptor (Span<uint8_t> target_buffer, Device const& device, uint8_t configuration_index, pDeviceStrings const& strings)
 	{
-		size_t offset = 0;
+		Configuration const configuration = device.configuration_for_index (configuration_index);
+		auto const initial_pointer = target_buffer.data();
 
 		auto& configuration_descriptor = target_buffer.template as<ConfigurationDescriptor>();
-		configuration_descriptor = make_configuration_descriptor (configuration, strings);
-		offset += sizeof (configuration_descriptor);
+		configuration_descriptor = make_configuration_descriptor (device, configuration, strings);
+		target_buffer.remove_prefix (sizeof (configuration_descriptor));
 
 		for (auto const& interface: configuration.interfaces)
 		{
-			auto& interface_descriptor = target_buffer.template as<InterfaceDescriptor> (offset);
+			auto& interface_descriptor = target_buffer.template as<InterfaceDescriptor>();
 			interface_descriptor = make_interface_descriptor (interface, strings);
-			offset += sizeof (interface_descriptor);
+			target_buffer.remove_prefix (sizeof (interface_descriptor));
 
 			for (auto const& endpoint: interface.endpoints)
 			{
-				auto& endpoint_descriptor = target_buffer.template as<EndpointDescriptor> (offset);
+				auto& endpoint_descriptor = target_buffer.template as<EndpointDescriptor>();
 				endpoint_descriptor = make_endpoint_descriptor (endpoint);
-				offset += sizeof (endpoint_descriptor);
+				target_buffer.remove_prefix (sizeof (endpoint_descriptor));
 			}
 		}
 
-		configuration_descriptor.length = offset;
-		return offset;
+		size_t const total_length = target_buffer.data() - initial_pointer;
+		configuration_descriptor.total_length = total_length;
+		return total_length;
 	}
 
 
@@ -292,7 +340,7 @@ template<class ...pLanguageIDs>
 template<class ...pLanguageIDs>
 	[[nodiscard]]
 	constexpr size_t
-	make_string_descriptor_0 (ArrayView<uint8_t> target_buffer, LanguageID language_id, pLanguageIDs ...remaining_language_ids)
+	make_string_descriptor_0 (Span<uint8_t> target_buffer, LanguageID language_id, pLanguageIDs ...remaining_language_ids)
 	{
 		auto& descriptor = target_buffer.template as<StringDescriptorZero>();
 		constexpr size_t tags_length = sizeof (LanguageID) * (1 + sizeof... (remaining_language_ids));
@@ -317,7 +365,7 @@ template<class ...pLanguageIDs>
  */
 [[nodiscard]]
 constexpr size_t
-make_string_descriptor (ArrayView<uint8_t> target_buffer, String const& string)
+make_string_descriptor (Span<uint8_t> target_buffer, String const& string)
 {
 	auto& descriptor = target_buffer.template as<StringDescriptor>();
 	size_t string_size_bytes = string.size() * sizeof (String::Char);

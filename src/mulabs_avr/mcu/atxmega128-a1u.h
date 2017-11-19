@@ -35,8 +35,8 @@
 #include <mulabs_avr/devices/xmega_au/basic_usb.h>
 #include <mulabs_avr/devices/xmega_au/event_system.h>
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
+#include <mulabs_avr/std/type_traits.h>
 #include <mulabs_avr/utility/array.h>
-#include <mulabs_avr/utility/type_traits.h>
 
 
 namespace mulabs {
@@ -103,19 +103,19 @@ class ATXMega128A1U
 		DACB1GAINCAL	= 0x37,
 	};
 
-	static_assert (is_literal_type<ATXMega128A1U::Register8>::value, "Register8 must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::Register16>::value, "Register16 must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::Clock>::value, "Clock must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::IO>::value, "IO must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::Pin>::value, "Pin must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::Port>::value, "Port must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::PinSet>::value, "PinSet must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::JTAG>::value, "JTAG must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::Timer01>::value, "Timer01 must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::USART>::value, "USART must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::USB>::value, "USB must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::EventSystem>::value, "EventSystem must be a literal type");
-	static_assert (is_literal_type<ATXMega128A1U::InterruptSystem>::value, "InterruptSystem must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::Register8>::value, "Register8 must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::Register16>::value, "Register16 must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::Clock>::value, "Clock must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::IO>::value, "IO must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::Pin>::value, "Pin must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::Port>::value, "Port must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::PinSet>::value, "PinSet must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::JTAG>::value, "JTAG must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::Timer01>::value, "Timer01 must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::USART>::value, "USART must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::USB>::value, "USB must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::EventSystem>::value, "EventSystem must be a literal type");
+	static_assert (std::is_literal_type<ATXMega128A1U::InterruptSystem>::value, "InterruptSystem must be a literal type");
 
 	static constexpr Port		port_a		{ 0x0600, 0 };
 	static constexpr Port		port_b		{ 0x0620, 1 };

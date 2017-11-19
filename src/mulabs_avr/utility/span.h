@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__UTILITY__ARRAY_VIEW_H__INCLUDED
-#define MULABS_AVR__UTILITY__ARRAY_VIEW_H__INCLUDED
+#ifndef MULABS_AVR__UTILITY__SPAN_H__INCLUDED
+#define MULABS_AVR__UTILITY__SPAN_H__INCLUDED
 
 // Standard:
 #include <stddef.h>
@@ -24,8 +24,9 @@
 namespace mulabs {
 namespace avr {
 
+// TODO have two versions, for const data and non-const data.
 template<class pValue>
-	class ArrayView
+	class Span
 	{
 	  public:
 		typedef pValue				Value;
@@ -46,25 +47,25 @@ template<class pValue>
 	  public:
 		// Ctor
 		constexpr
-		ArrayView() = default;
+		Span() = default;
 
 		// Ctor
 		constexpr
-		ArrayView (ArrayView const&) = default;
+		Span (Span const&) = default;
 
 		// Ctor
 		constexpr
-		ArrayView (Value* data, size_t length);
+		Span (Value* data, size_t length);
 
 		// Ctor
 		template<size_t N>
 			constexpr
-			ArrayView (Value (&data)[N]);
+			Span (Value (&data)[N]);
 
 		// Ctor
 		template<size_t N>
 			constexpr
-			ArrayView (Array<Value, N>&);
+			Span (Array<Value, N>&);
 
 		constexpr reference
 		operator[] (size_type pos);
@@ -122,14 +123,14 @@ template<class pValue>
 		 */
 		template<class Target>
 			constexpr Target&
-			as (size_t offset_bytes = 0);
+			as();
 
 		/**
 		 * Return buffer casted to given type.
 		 */
 		template<class Target>
 			constexpr Target const&
-			as (size_t offset_bytes = 0) const;
+			as() const;
 
 	  private:
 		pointer	_data	= nullptr;
@@ -139,7 +140,7 @@ template<class pValue>
 
 template<class V>
 	constexpr
-	ArrayView<V>::ArrayView (Value* data, size_t size):
+	Span<V>::Span (Value* data, size_t size):
 		_data (data),
 		_size (size)
 	{ }
@@ -148,7 +149,7 @@ template<class V>
 template<class V>
 	template<size_t N>
 		constexpr
-		ArrayView<V>::ArrayView (Value (&data)[N]):
+		Span<V>::Span (Value (&data)[N]):
 			_data (data),
 			_size (N)
 		{ }
@@ -157,71 +158,71 @@ template<class V>
 template<class V>
 	template<size_t N>
 		constexpr
-		ArrayView<V>::ArrayView (Array<Value, N>& array):
+		Span<V>::Span (Array<Value, N>& array):
 			_data (array.data()),
 			_size (array.size())
 		{ }
 
 
 template<class V>
-	constexpr typename ArrayView<V>::reference
-	ArrayView<V>::operator[] (size_type pos)
+	constexpr typename Span<V>::reference
+	Span<V>::operator[] (size_type pos)
 	{
 		return _data[pos];
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::const_reference
-	ArrayView<V>::operator[] (size_type pos) const
+	constexpr typename Span<V>::const_reference
+	Span<V>::operator[] (size_type pos) const
 	{
 		return _data[pos];
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::reference
-	ArrayView<V>::front()
+	constexpr typename Span<V>::reference
+	Span<V>::front()
 	{
 		return _data[0];
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::const_reference
-	ArrayView<V>::front() const
+	constexpr typename Span<V>::const_reference
+	Span<V>::front() const
 	{
 		return _data[0];
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::reference
-	ArrayView<V>::back()
+	constexpr typename Span<V>::reference
+	Span<V>::back()
 	{
 		return _data[size() - 1];
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::const_reference
-	ArrayView<V>::back() const
+	constexpr typename Span<V>::const_reference
+	Span<V>::back() const
 	{
 		return _data[size() - 1];
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::pointer
-	ArrayView<V>::data()
+	constexpr typename Span<V>::pointer
+	Span<V>::data()
 	{
 		return _data;
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::const_pointer
-	ArrayView<V>::data() const
+	constexpr typename Span<V>::const_pointer
+	Span<V>::data() const
 	{
 		return _data;
 	}
@@ -229,23 +230,23 @@ template<class V>
 
 template<class V>
 	constexpr bool
-	ArrayView<V>::empty() const
+	Span<V>::empty() const
 	{
 		return size() == 0;
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::size_type
-	ArrayView<V>::size() const
+	constexpr typename Span<V>::size_type
+	Span<V>::size() const
 	{
 		return _size;
 	}
 
 
 template<class V>
-	constexpr typename ArrayView<V>::size_type
-	ArrayView<V>::max_size() const
+	constexpr typename Span<V>::size_type
+	Span<V>::max_size() const
 	{
 		return _size;
 	}
@@ -253,7 +254,7 @@ template<class V>
 
 template<class V>
 	constexpr void
-	ArrayView<V>::remove_prefix (size_type n)
+	Span<V>::remove_prefix (size_type n)
 	{
 		_data += n;
 	}
@@ -261,7 +262,7 @@ template<class V>
 
 template<class V>
 	constexpr void
-	ArrayView<V>::remove_suffix (size_type n)
+	Span<V>::remove_suffix (size_type n)
 	{
 		_size -= n;
 	}
@@ -269,7 +270,7 @@ template<class V>
 
 template<class V>
 	constexpr void
-	ArrayView<V>::fill (const_reference value)
+	Span<V>::fill (const_reference value)
 	{
 		for (size_type i = 0; i < size(); ++i)
 			_data[i] = value;
@@ -278,7 +279,7 @@ template<class V>
 
 template<class V>
 	constexpr void
-	ArrayView<V>::set_bit_value (size_t bit_number, bool value)
+	Span<V>::set_bit_value (size_t bit_number, bool value)
 	{
 		constexpr size_t pos = bit_number / sizeof (value_type);
 		constexpr value_type mask = static_cast<value_type> (1) << (bit_number % sizeof (value_type));
@@ -293,23 +294,21 @@ template<class V>
 template<class V>
 	template<class Target>
 		constexpr Target&
-		ArrayView<V>::as (size_t offset_bytes)
+		Span<V>::as()
 		{
-			// TODO take offset_bytes into account
 			if (sizeof (Target) > size() * sizeof (Value))
 				throw BufferTooSmall();
 
-			uint8_t* raw_data = reinterpret_cast<uint8_t*> (data());
-			return reinterpret_cast<Target&> (*(raw_data + offset_bytes));
+			return reinterpret_cast<Target&> (*data());
 		}
 
 
 template<class V>
 	template<class Target>
 		constexpr Target const&
-		ArrayView<V>::as (size_t offset_bytes) const
+		Span<V>::as() const
 		{
-			return const_cast<ArrayView<V>*> (this)->as<Target> (offset_bytes);
+			return const_cast<Span<V>*> (this)->as<Target>();
 		}
 
 } // namespace avr

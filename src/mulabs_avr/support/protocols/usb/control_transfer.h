@@ -14,7 +14,8 @@
 #ifndef MULABS_AVR__SUPPORT__PROTOCOLS__CONTROL_TRANSFER_H__INCLUDED
 #define MULABS_AVR__SUPPORT__PROTOCOLS__CONTROL_TRANSFER_H__INCLUDED
 
-#include <mulabs_avr/utility/array_view.h>
+// Mulabs:
+#include <mulabs_avr/utility/span.h>
 
 
 namespace mulabs {
@@ -197,7 +198,7 @@ template<class IE, class IB, class OE, class OB, size_t S>
 								reset (State::Wait4OutputToken);
 							else
 							{
-								if (on_setup (_setup, ArrayView<uint8_t>()))
+								if (on_setup (_setup, Span<uint8_t>()))
 									reset (State::Wait4HostToDeviceAck);
 								else
 									reset (State::Wait4SetupToken);
@@ -205,7 +206,7 @@ template<class IE, class IB, class OE, class OB, size_t S>
 							break;
 
 						case SetupPacket::TransferDirection::DeviceToHost:
-							if (on_setup (_setup, ArrayView<uint8_t>()))
+							if (on_setup (_setup, Span<uint8_t>()))
 								reset (State::Wait4InputToken);
 							else
 								reset (State::Wait4SetupToken);
@@ -233,7 +234,7 @@ template<class IE, class IB, class OE, class OB, size_t S>
 							switch (post_output())
 							{
 								case NextOutputResult::Finished:
-									if (on_setup (_setup, ArrayView (_buffer.data(), _position)))
+									if (on_setup (_setup, Span (_buffer.data(), _position)))
 										reset (State::Wait4HostToDeviceAck);
 									break;
 
