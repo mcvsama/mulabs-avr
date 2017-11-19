@@ -22,18 +22,20 @@ namespace mulabs {
 namespace avr {
 namespace usb {
 
-using Index				= StrongType<uint8_t, struct IndexType>;
-using AlternateIndex	= StrongType<uint8_t, struct AlternateIndexType>;
-using MaxPacketSize		= StrongType<uint8_t, struct MaxPacketSizeType>;
-using VendorID			= StrongType<uint16_t, struct VendorIDType>;
-using ProductID			= StrongType<uint16_t, struct ProductIDType>;
-using ReleaseID			= StrongType<uint16_t, struct ReleaseIDType>;
-using DeviceSubClass	= StrongType<uint8_t, struct DeviceSubClassType>;
-using DeviceProtocol	= StrongType<uint8_t, struct DeviceProtocolType>;
-using MaxPowerMilliAmps	= StrongType<uint8_t, struct MaxPowerMilliAmpsType>;
-using SelfPowered		= StrongType<bool, struct SelfPoweredType>;
-using RemoteWakeup		= StrongType<bool, struct RemoteWakeupType>;
-using Interval			= StrongType<uint8_t, struct IntervalType>;
+using Index					= StrongType<uint8_t, struct IndexType>;
+using AlternateIndex		= StrongType<uint8_t, struct AlternateIndexType>;
+using ConfigurationValue	= StrongType<uint8_t, struct ConfigurationValueType>;
+using MaxPacketSize0		= StrongType<uint8_t, struct MaxPacketSize0Type>;
+using MaxPacketSize			= StrongType<uint16_t, struct MaxPacketSizeType>;
+using VendorID				= StrongType<uint16_t, struct VendorIDType>;
+using ProductID				= StrongType<uint16_t, struct ProductIDType>;
+using ReleaseID				= StrongType<uint16_t, struct ReleaseIDType>;
+using DeviceSubClass		= StrongType<uint8_t, struct DeviceSubClassType>;
+using DeviceProtocol		= StrongType<uint8_t, struct DeviceProtocolType>;
+using MaxPowerMilliAmps		= StrongType<uint8_t, struct MaxPowerMilliAmpsType>;
+using SelfPowered			= StrongType<bool, struct SelfPoweredType>;
+using RemoteWakeup			= StrongType<bool, struct RemoteWakeupType>;
+using Interval				= StrongType<uint8_t, struct IntervalType>;
 
 enum class USBVersion: uint16_t
 {

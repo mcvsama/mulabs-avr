@@ -69,6 +69,13 @@ class Exception
 { };
 
 
+/**
+ * Generic out-of-bounds exception.
+ */
+class OutOfBounds: public Exception
+{ };
+
+
 class Endpoint
 {
   public:
@@ -123,9 +130,9 @@ class Interface
   public:
 	Index							index;
 	AlternateIndex					alternate_index;
-	DeviceClass						device_class;
-	DeviceSubClass					device_sub_class;
-	DeviceProtocol					device_protocol;
+	DeviceClass						interface_class;
+	DeviceSubClass					interface_sub_class;
+	DeviceProtocol					interface_protocol;
 	String							description;
 	std::initializer_list<Endpoint>	endpoints;
 };
@@ -135,7 +142,7 @@ class Configuration
 {
   public:
 	// Thrown when configuration index is 0, which is forbidden.
-	class ConfigurationIndexMustNotBe0: public Exception
+	class ConfigurationValueMustNotBe0: public Exception
 	{ };
 
 	// Thrown when interface indices are not sequentially ordered starting from 0.
@@ -153,10 +160,10 @@ class Configuration
   public:
 	// Ctor
 	explicit constexpr
-	Configuration (Index, String description, SelfPowered, RemoteWakeup, MaxPowerMilliAmps, std::initializer_list<Interface>);
+	Configuration (ConfigurationValue, String description, SelfPowered, RemoteWakeup, MaxPowerMilliAmps, std::initializer_list<Interface>);
 
   public:
-	Index								index;
+	ConfigurationValue					value;
 	String								description;
 	SelfPowered							self_powered;
 	RemoteWakeup						remote_wakeup;
@@ -176,7 +183,7 @@ class Device
 	// Ctor
 	explicit constexpr
 	Device (USBVersion, VendorID, ProductID, ReleaseID, DeviceClass, DeviceSubClass, DeviceProtocol,
-			Manufacturer, Product, Serial, MaxPacketSize max_packet_size_0, std::initializer_list<Configuration> configurations);
+			Manufacturer, Product, Serial, MaxPacketSize0 max_packet_size_0, std::initializer_list<Configuration> configurations);
 
 	/**
 	 * Return maximum endpoint address.
@@ -184,8 +191,18 @@ class Device
 	constexpr uint8_t
 	maximum_endpoint_id() const;
 
+	/**
+	 * Return maximum index of string-descriptor used by this configuration.
+	 */
 	constexpr size_t
 	max_string_index() const;
+
+	/**
+	 * Return configuration descriptor by index.
+	 * Valid indices are 1…N.
+	 */
+	constexpr Configuration
+	configuration_for_index (uint8_t) const;
 
   public:
 	USBVersion								usb_version;
@@ -198,7 +215,7 @@ class Device
 	Manufacturer							manufacturer;
 	Product									product;
 	Serial									serial;
-	MaxPacketSize							max_packet_size_0;
+	MaxPacketSize0							max_packet_size_0;
 	std::initializer_list<Configuration>	configurations;
 };
 
@@ -278,34 +295,34 @@ Endpoint::Endpoint (Index index, Direction direction, TransferType transfer_type
 
 constexpr
 Interface::Interface (Index index, AlternateIndex alternate_index,
-					  DeviceClass device_class, DeviceSubClass device_sub_class, DeviceProtocol device_protocol, String description,
+					  DeviceClass interface_class, DeviceSubClass interface_sub_class, DeviceProtocol interface_protocol, String description,
 					  std::initializer_list<Endpoint> endpoints):
 	index (index),
 	alternate_index (alternate_index),
-	device_class (device_class),
-	device_sub_class (device_sub_class),
-	device_protocol (device_protocol),
+	interface_class (interface_class),
+	interface_sub_class (interface_sub_class),
+	interface_protocol (interface_protocol),
 	description (description),
 	endpoints (endpoints)
 {
 	// Ensure that interface doesn't say the device class is interface-specified, because we're the interface:
-	if (device_class == DeviceClass::InterfaceSpecified)
+	if (interface_class == DeviceClass::InterfaceSpecified)
 		throw BadDeviceClass();
 }
 
 
 constexpr
-Configuration::Configuration (Index index, String description, SelfPowered self_powered, RemoteWakeup remote_wakeup,
+Configuration::Configuration (ConfigurationValue value, String description, SelfPowered self_powered, RemoteWakeup remote_wakeup,
 							  MaxPowerMilliAmps max_power_milli_amps, std::initializer_list<Interface> interfaces):
-	index (index),
+	value (value),
 	description (description),
 	self_powered (self_powered),
 	remote_wakeup (remote_wakeup),
 	max_power_milli_amps (max_power_milli_amps),
 	interfaces (interfaces)
 {
-	if (*index == 0)
-		throw ConfigurationIndexMustNotBe0();
+	if (*value == 0)
+		throw ConfigurationValueMustNotBe0();
 
 	// Ensure that interfaces are numbered sequentially from 0 as required by the USB standard:
 	auto interface = interfaces.begin();
@@ -350,7 +367,7 @@ Configuration::Configuration (Index index, String description, SelfPowered self_
 constexpr
 Device::Device (USBVersion usb_version, VendorID vendor_id, ProductID product_id, ReleaseID release_id,
 				DeviceClass device_class, DeviceSubClass device_sub_class, DeviceProtocol device_protocol,
-				Manufacturer manufacturer, Product product, Serial serial, MaxPacketSize max_packet_size_0,
+				Manufacturer manufacturer, Product product, Serial serial, MaxPacketSize0 max_packet_size_0,
 				std::initializer_list<Configuration> configurations):
 	usb_version (usb_version),
 	vendor_id (vendor_id),
@@ -371,7 +388,7 @@ Device::Device (USBVersion usb_version, VendorID vendor_id, ProductID product_id
 		size_t num = 0;
 
 		for (auto const& other: configurations)
-			if (*configuration.index == *other.index)
+			if (*configuration.value == *other.value)
 				++num;
 
 		if (num > 1)
@@ -409,6 +426,16 @@ Device::max_string_index() const
 }
 
 
+constexpr Configuration
+Device::configuration_for_index (uint8_t index) const
+{
+	if (index < configurations.size())
+		return *(configurations.begin() + index);
+	else
+		throw OutOfBounds();
+}
+
+
 template<Device const& D>
 	constexpr
 	DeviceStrings<D>::DeviceStrings():
@@ -418,9 +445,24 @@ template<Device const& D>
 
 template<Device const& D>
 	constexpr String
-	DeviceStrings<D>::string_for_index(uint8_t descriptor_index) const
+	DeviceStrings<D>::string_for_index (uint8_t index) const
 	{
-		return strings[descriptor_index - 1];
+		if (index == 0 || index > strings.size())
+			throw OutOfBounds();
+
+		return strings[index - 1];
+	}
+
+
+template<Device const& D>
+	constexpr uint8_t
+	DeviceStrings<D>::index_for_string (String string) const
+	{
+		for (uint8_t i = 0; i < strings.size(); ++i)
+			if (strings[i] == string)
+				return i + 1;
+
+		return 0;
 	}
 
 
@@ -444,18 +486,6 @@ template<Device const& D>
 		}
 
 		return result;
-	}
-
-
-template<Device const& D>
-	constexpr uint8_t
-	DeviceStrings<D>::index_for_string (String string) const
-	{
-		for (uint8_t i = 0; i < string.size(); ++i)
-			if (strings[i] == string)
-				return i;
-
-		return 0;
 	}
 
 } // namespace usb

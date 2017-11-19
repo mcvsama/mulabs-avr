@@ -94,14 +94,14 @@ template<class pValue, size_t pSize>
 		 */
 		template<class Target>
 			constexpr Target&
-			as();
+			as (size_t offset_bytes = 0u);
 
 		/**
 		 * Return buffer casted to given type.
 		 */
 		template<class Target>
 			constexpr Target const&
-			as() const;
+			as (size_t offset_bytes = 0u) const;
 
 	  private:
 		Value _data[pSize];
@@ -222,20 +222,21 @@ template<class V, size_t S>
 template<class V, size_t S>
 	template<class Target>
 		constexpr Target&
-		Array<V, S>::as()
+		Array<V, S>::as (size_t offset_bytes)
 		{
 			static_assert (sizeof (Target) <= S * sizeof (Value), "array buffer too small for target type");
 
-			return reinterpret_cast<Target&> (*data());
+			uint8_t* raw_data = reinterpret_cast<uint8_t*> (data());
+			return reinterpret_cast<Target&> (*(raw_data + offset_bytes));
 		}
 
 
 template<class V, size_t S>
 	template<class Target>
 		constexpr Target const&
-		Array<V, S>::as() const
+		Array<V, S>::as (size_t offset_bytes) const
 		{
-			return const_cast<Array<V, S>*> (this)->as<Target>();
+			return const_cast<Array<V, S>*> (this)->as<Target> (offset_bytes);
 		}
 
 } // namespace avr

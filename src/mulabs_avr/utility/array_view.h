@@ -54,7 +54,17 @@ template<class pValue>
 
 		// Ctor
 		constexpr
-		ArrayView (Value const* data, size_t length);
+		ArrayView (Value* data, size_t length);
+
+		// Ctor
+		template<size_t N>
+			constexpr
+			ArrayView (Value (&data)[N]);
+
+		// Ctor
+		template<size_t N>
+			constexpr
+			ArrayView (Array<Value, N>&);
 
 		constexpr reference
 		operator[] (size_type pos);
@@ -112,27 +122,45 @@ template<class pValue>
 		 */
 		template<class Target>
 			constexpr Target&
-			as();
+			as (size_t offset_bytes = 0);
 
 		/**
 		 * Return buffer casted to given type.
 		 */
 		template<class Target>
 			constexpr Target const&
-			as() const;
+			as (size_t offset_bytes = 0) const;
 
 	  private:
-		Value const*	_data	= nullptr;
-		size_t			_size	= 0;
+		pointer	_data	= nullptr;
+		size_t	_size	= 0;
 	};
 
 
 template<class V>
 	constexpr
-	ArrayView<V>::ArrayView (Value const* data, size_t size):
+	ArrayView<V>::ArrayView (Value* data, size_t size):
 		_data (data),
 		_size (size)
 	{ }
+
+
+template<class V>
+	template<size_t N>
+		constexpr
+		ArrayView<V>::ArrayView (Value (&data)[N]):
+			_data (data),
+			_size (N)
+		{ }
+
+
+template<class V>
+	template<size_t N>
+		constexpr
+		ArrayView<V>::ArrayView (Array<Value, N>& array):
+			_data (array.data()),
+			_size (array.size())
+		{ }
 
 
 template<class V>
@@ -265,21 +293,23 @@ template<class V>
 template<class V>
 	template<class Target>
 		constexpr Target&
-		ArrayView<V>::as()
+		ArrayView<V>::as (size_t offset_bytes)
 		{
-			if (sizeof (Target) <= size() * sizeof (Value))
+			// TODO take offset_bytes into account
+			if (sizeof (Target) > size() * sizeof (Value))
 				throw BufferTooSmall();
 
-			return reinterpret_cast<Target&> (*data());
+			uint8_t* raw_data = reinterpret_cast<uint8_t*> (data());
+			return reinterpret_cast<Target&> (*(raw_data + offset_bytes));
 		}
 
 
 template<class V>
 	template<class Target>
 		constexpr Target const&
-		ArrayView<V>::as() const
+		ArrayView<V>::as (size_t offset_bytes) const
 		{
-			return const_cast<ArrayView<V>*> (this)->as<Target>();
+			return const_cast<ArrayView<V>*> (this)->as<Target> (offset_bytes);
 		}
 
 } // namespace avr

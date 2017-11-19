@@ -27,7 +27,13 @@ struct __class_type_info
 {
 	virtual void unused()
 	{ }
-} ti;
+} class_type_info;
+
+struct __si_class_type_info
+{
+	virtual void unused()
+	{ }
+} si_class_type_info;
 
 } // namespace __cxxabiv1
 

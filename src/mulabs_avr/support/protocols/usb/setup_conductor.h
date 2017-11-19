@@ -200,10 +200,10 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 										{
 											debug ("    DescriptorType::Configuration\n");
 											// A request for the configuration descriptor should return the device descriptor and all interface and endpoint
-											// descriptors in the one request. TODO?
-											auto const desc = make_configuration_descriptor (*_device.configurations.begin(), _device_strings);
-											transfer.buffer().template as<ConfigurationDescriptor>() = desc;
-											transfer.set_transfer_size (std::min (setup.length, sizeof (desc)));
+											// descriptors in one request.
+											Configuration conf = _device.configuration_for_index (setup.request.device.get_descriptor.index);
+											size_t size = make_full_configuration_descriptor (transfer.buffer(), conf, _device_strings);
+											transfer.set_transfer_size (std::min (setup.length, size));
 											break;
 										}
 
@@ -214,15 +214,13 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 
 											if (index == 0)
 											{
-												auto& descriptor = transfer.buffer().template as<StringDescriptorZero>();
-												auto const actual_size = make_string_descriptor_0 (descriptor, transfer.buffer().size(), LanguageID::English);
+												auto const actual_size = make_string_descriptor_0 (transfer.buffer(), LanguageID::English);
 												transfer.set_transfer_size (actual_size);
 											}
 											else
 											{
 												auto const& string = _device_strings.string_for_index (setup.request.device.get_descriptor.index);
-												auto& descriptor = transfer.buffer().template as<StringDescriptor>();
-												auto const actual_size = make_string_descriptor (descriptor, transfer.buffer().size(), string);
+												auto const actual_size = make_string_descriptor (transfer.buffer(), string);
 												transfer.set_transfer_size (actual_size);
 											}
 											break;
