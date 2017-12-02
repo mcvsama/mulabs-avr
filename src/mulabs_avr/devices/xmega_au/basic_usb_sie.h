@@ -11,15 +11,15 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_H__INCLUDED
-#define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_H__INCLUDED
+#ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_SIE_H__INCLUDED
+#define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_SIE_H__INCLUDED
 
 // Mulabs:
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
 #include <mulabs_avr/support/protocols/usb/device_definition.h>
 
 // Local:
-#include "basic_usb_endpoint.h"
+#include "basic_usb_sie_endpoint.h"
 
 
 namespace mulabs {
@@ -27,14 +27,14 @@ namespace avr {
 namespace xmega_au {
 
 template<class pMCU>
-	class BasicUSB
+	class BasicUSBSIE
 	{
 	  public:
 		using MCU				= pMCU;
 		using Register8			= typename MCU::Register8;
-		using Endpoint			= BasicUSBEndpoint<MCU>;
-		using InputEndpoint		= BasicUSBInputEndpoint<MCU>;
-		using OutputEndpoint	= BasicUSBOutputEndpoint<MCU>;
+		using Endpoint			= BasicUSBSIEEndpoint<MCU>;
+		using InputEndpoint		= BasicUSBSIEInputEndpoint<MCU>;
+		using OutputEndpoint	= BasicUSBSIEOutputEndpoint<MCU>;
 
 		enum class Speed
 		{
@@ -113,7 +113,7 @@ template<class pMCU>
 				 * Return the maximum endpoint index held by this buffer.
 				 */
 				constexpr uint8_t
-				maximum_endpoint_id() const;
+				maximum_endpoint_address() const;
 
 				/**
 				 * Return pointer to the endpoints table (be used for EPPTR register).
@@ -153,15 +153,15 @@ template<class pMCU>
 	  public:
 		// Ctor
 		explicit constexpr
-		BasicUSB (size_t base_address);
+		BasicUSBSIE (size_t base_address);
 
 		// Equality operator
 		constexpr bool
-		operator== (BasicUSB const& other) const;
+		operator== (BasicUSBSIE const& other) const;
 
 		// Inequality operator
 		constexpr bool
-		operator!= (BasicUSB const& other) const;
+		operator!= (BasicUSBSIE const& other) const;
 
 		/**
 		 * Reads calibration registers from the production signature row and setups USB calibration registers.
@@ -342,17 +342,13 @@ template<class pMCU>
 			static constexpr uint16_t
 			make_interrupts_list (Interrupt interrupt, Interrupts ...interrupts)
 			{
-				return make_interrupts_list (interrupt) | make_interrupts_list (interrupts...);
-			}
+				uint16_t result = static_cast<uint16_t> (interrupt);
 
-		/**
-		 * Recursive stop-condition for make_interrupts_list().
-		 */
-		static constexpr uint16_t
-		make_interrupts_list (Interrupt interrupt)
-		{
-			return static_cast<uint16_t> (interrupt);
-		}
+				if constexpr (sizeof... (interrupts) > 0)
+					result |= make_interrupts_list (interrupts...);
+
+				return result;
+			}
 
 		/**
 		 * Helper for enable()/disable() of Interrupts.
@@ -361,17 +357,13 @@ template<class pMCU>
 			static constexpr uint16_t
 			make_interrupt_flags_list (InterruptFlag interrupt_flag, InterruptFlags ...interrupt_flags)
 			{
-				return make_interrupt_flags_list (interrupt_flag) | make_interrupt_flags_list (interrupt_flags...);
-			}
+				uint16_t result = static_cast<uint16_t> (interrupt_flag);
 
-		/**
-		 * Recursive stop-condition for make_interrupts_list().
-		 */
-		static constexpr uint16_t
-		make_interrupt_flags_list (InterruptFlag interrupt_flag)
-		{
-			return static_cast<uint16_t> (interrupt_flag);
-		}
+				if constexpr (sizeof... (interrupt_flags) > 0)
+					result |= make_interrupt_flags_list (interrupt_flags...);
+
+				return result;
+			}
 
 	  private:
 		size_t const	_base_address;
@@ -390,16 +382,16 @@ template<class pMCU>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::EndpointsTable()
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::EndpointsTable()
 		{ }
 
 
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::EndpointsTable (usb::Device const& device)
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::EndpointsTable (usb::Device const& device)
 		{
-			if (device.maximum_endpoint_id() != maximum_endpoint_id())
+			if (device.maximum_endpoint_address() != maximum_endpoint_address())
 				throw WrongEndpointsNumber();
 		}
 
@@ -407,7 +399,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::single_direction_number() const
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::single_direction_number() const
 		{
 			return 2 * EndpointsNumber;
 		}
@@ -416,7 +408,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::number() const
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::number() const
 		{
 			return EndpointsNumber;
 		}
@@ -425,7 +417,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::maximum_endpoint_id() const
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::maximum_endpoint_address() const
 		{
 			return EndpointsNumber - 1;
 		}
@@ -434,7 +426,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t*
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::table()
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::table()
 		{
 			return _buffer;
 		}
@@ -443,7 +435,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t*
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::operator[] (uint8_t n)
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::operator[] (uint8_t n)
 		{
 			return _buffer + n * kSingleDirectionEndpointSize;
 		}
@@ -452,7 +444,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t*
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::nth_output (uint8_t n)
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::nth_output (uint8_t n)
 		{
 			return _buffer + (2 * n) * kSingleDirectionEndpointSize;
 		}
@@ -461,7 +453,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		constexpr uint8_t*
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::nth_input (uint8_t n)
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::nth_input (uint8_t n)
 		{
 			return _buffer + (2 * n + 1) * kSingleDirectionEndpointSize;
 		}
@@ -470,7 +462,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		inline uint16_t
-		BasicUSB<M>::EndpointsTable<EndpointsNumber>::framenum() const
+		BasicUSBSIE<M>::EndpointsTable<EndpointsNumber>::framenum() const
 		{
 			return _framenum;
 		}
@@ -478,7 +470,7 @@ template<class M>
 
 template<class M>
 	constexpr
-	BasicUSB<M>::BasicUSB (size_t base_address):
+	BasicUSBSIE<M>::BasicUSBSIE (size_t base_address):
 		_base_address (base_address),
 		_ctrla (base_address + 0x00),
 		_ctrlb (base_address + 0x01),
@@ -501,7 +493,7 @@ template<class M>
 
 template<class M>
 	constexpr bool
-	BasicUSB<M>::operator== (BasicUSB const& other) const
+	BasicUSBSIE<M>::operator== (BasicUSBSIE const& other) const
 	{
 		return _base_address == other._base_address;
 	}
@@ -509,7 +501,7 @@ template<class M>
 
 template<class M>
 	constexpr bool
-	BasicUSB<M>::operator!= (BasicUSB const& other) const
+	BasicUSBSIE<M>::operator!= (BasicUSBSIE const& other) const
 	{
 		return !(*this == other);
 	}
@@ -517,7 +509,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::calibrate() const
+	BasicUSBSIE<M>::calibrate() const
 	{
 		_cal0 = MCU::read (MCU::SignatureRegister::USBCAL0);
 		_cal1 = MCU::read (MCU::SignatureRegister::USBCAL1);
@@ -526,7 +518,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_enabled (bool enabled) const
+	BasicUSBSIE<M>::set_enabled (bool enabled) const
 	{
 		_ctrla.template set_bit_value<7> (enabled);
 	}
@@ -534,7 +526,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set (Speed speed) const
+	BasicUSBSIE<M>::set (Speed speed) const
 	{
 		switch (speed)
 		{
@@ -551,7 +543,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_fifo_enabled (bool enabled) const
+	BasicUSBSIE<M>::set_fifo_enabled (bool enabled) const
 	{
 		_ctrla.template set_bit_value<5> (enabled);
 	}
@@ -559,7 +551,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_store_framenum_enabled (bool enabled) const
+	BasicUSBSIE<M>::set_store_framenum_enabled (bool enabled) const
 	{
 		_ctrla.template set_bit_value<4> (enabled);
 	}
@@ -567,7 +559,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_pullrst_enabled (bool enabled) const
+	BasicUSBSIE<M>::set_pullrst_enabled (bool enabled) const
 	{
 		_ctrlb.template set_bit_value<4> (enabled);
 	}
@@ -575,7 +567,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_rwakeup_enabled (bool enabled) const
+	BasicUSBSIE<M>::set_rwakeup_enabled (bool enabled) const
 	{
 		_ctrlb.template set_bit_value<2> (enabled);
 	}
@@ -583,7 +575,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_gnack_enabled (bool enabled) const
+	BasicUSBSIE<M>::set_gnack_enabled (bool enabled) const
 	{
 		_ctrlb.template set_bit_value<1> (enabled);
 	}
@@ -592,7 +584,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		inline void
-		BasicUSB<M>::set_endpoints_number() const
+		BasicUSBSIE<M>::set_endpoints_number() const
 		{
 			static_assert (1 <= EndpointsNumber && EndpointsNumber <= 16);
 
@@ -603,7 +595,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		inline void
-		BasicUSB<M>::set_endpoints_table (uint8_t* endpoints) const
+		BasicUSBSIE<M>::set_endpoints_table (uint8_t* endpoints) const
 		{
 			_epptrl = static_cast<uint8_t> (reinterpret_cast<size_t> (endpoints) >> 0) & 0xff;
 			_epptrh = static_cast<uint8_t> (reinterpret_cast<size_t> (endpoints) >> 8) & 0xff;
@@ -614,7 +606,7 @@ template<class M>
 template<class M>
 	template<uint8_t EndpointsNumber>
 		inline void
-		BasicUSB<M>::set_endpoints_table (EndpointsTable<EndpointsNumber>& endpoints_table) const
+		BasicUSBSIE<M>::set_endpoints_table (EndpointsTable<EndpointsNumber>& endpoints_table) const
 		{
 			set_endpoints_table<EndpointsNumber> (endpoints_table.table());
 		}
@@ -622,7 +614,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_address (uint8_t address) const
+	BasicUSBSIE<M>::set_address (uint8_t address) const
 	{
 		_addr = address;
 	}
@@ -630,7 +622,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set_attached (bool attached) const
+	BasicUSBSIE<M>::set_attached (bool attached) const
 	{
 		_ctrlb.template set_bit_value<0> (attached);
 	}
@@ -638,7 +630,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSB<M>::is_upstream_resume() const
+	BasicUSBSIE<M>::is_upstream_resume() const
 	{
 		return _status.template get_bit<3>();
 	}
@@ -646,7 +638,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSB<M>::is_downstream_resume() const
+	BasicUSBSIE<M>::is_downstream_resume() const
 	{
 		return _status.template get_bit<2>();
 	}
@@ -654,7 +646,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSB<M>::is_suspended() const
+	BasicUSBSIE<M>::is_suspended() const
 	{
 		return _status.template get_bit<1>();
 	}
@@ -662,7 +654,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSB<M>::is_bus_reset() const
+	BasicUSBSIE<M>::is_bus_reset() const
 	{
 		return _status.template get_bit<0>();
 	}
@@ -671,7 +663,7 @@ template<class M>
 template<class M>
 	template<class ...Interrupts>
 		inline void
-		BasicUSB<M>::enable (Interrupts ...interrupts) const
+		BasicUSBSIE<M>::enable (Interrupts ...interrupts) const
 		{
 			uint16_t const bits = make_interrupts_list (interrupts...);
 
@@ -686,7 +678,7 @@ template<class M>
 template<class M>
 	template<class ...Interrupts>
 		inline void
-		BasicUSB<M>::disable (Interrupts ...interrupts) const
+		BasicUSBSIE<M>::disable (Interrupts ...interrupts) const
 		{
 			uint16_t const bits = make_interrupts_list (interrupts...);
 
@@ -701,7 +693,7 @@ template<class M>
 template<class M>
 	template<class ...InterruptFlags>
 		inline void
-		BasicUSB<M>::trigger (InterruptFlags ...interrupt_flags) const
+		BasicUSBSIE<M>::trigger (InterruptFlags ...interrupt_flags) const
 		{
 			uint16_t const bits = make_interrupt_flags_list (interrupt_flags...);
 
@@ -716,7 +708,7 @@ template<class M>
 template<class M>
 	template<class ...InterruptFlags>
 		inline void
-		BasicUSB<M>::clear (InterruptFlags ...interrupt_flags) const
+		BasicUSBSIE<M>::clear (InterruptFlags ...interrupt_flags) const
 		{
 			uint16_t const bits = make_interrupt_flags_list (interrupt_flags...);
 			uint16_t const transaction_complete = static_cast<decltype (bits)> (InterruptFlag::TransactionComplete);
@@ -742,7 +734,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::clear_all_bus_event_interrupt_flags() const
+	BasicUSBSIE<M>::clear_all_bus_event_interrupt_flags() const
 	{
 		clear (
 			InterruptFlag::StartOfFrame,
@@ -759,7 +751,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::clear_all_transaction_complete_interrupt_flags() const
+	BasicUSBSIE<M>::clear_all_transaction_complete_interrupt_flags() const
 	{
 		clear (
 			InterruptFlag::TransactionComplete,
@@ -770,7 +762,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSB<M>::triggered (InterruptFlag flag) const
+	BasicUSBSIE<M>::triggered (InterruptFlag flag) const
 	{
 		uint16_t const bits = make_interrupt_flags_list (flag);
 
@@ -787,7 +779,7 @@ template<class M>
 template<class M>
 	template<class Function>
 		inline void
-		BasicUSB<M>::on (InterruptFlag flag, Function callback) const
+		BasicUSBSIE<M>::on (InterruptFlag flag, Function callback) const
 		{
 			if (triggered (flag))
 			{
@@ -799,7 +791,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSB<M>::set (InterruptSystem::Level level) const
+	BasicUSBSIE<M>::set (InterruptSystem::Level level) const
 	{
 		_intctrla.template set_bits_value<1, 0> (static_cast<uint8_t> (level));
 	}

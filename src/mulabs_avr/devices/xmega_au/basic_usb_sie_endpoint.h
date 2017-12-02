@@ -11,8 +11,8 @@
  * Visit http://www.gnu.org/licenses/gpl-3.0.html for more information on licensing.
  */
 
-#ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_ENDPOINT_H__INCLUDED
-#define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_ENDPOINT_H__INCLUDED
+#ifndef MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_SIE_ENDPOINT_H__INCLUDED
+#define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_USB_SIE_ENDPOINT_H__INCLUDED
 
 // Mulabs:
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
@@ -24,7 +24,7 @@ namespace avr {
 namespace xmega_au {
 
 template<class pMCU>
-	class alignas(2) BasicUSBEndpoint
+	class alignas(2) BasicUSBSIEEndpoint
 	{
 	  public:
 		using MCU			= pMCU;
@@ -88,16 +88,16 @@ template<class pMCU>
 	  protected:
 		// Ctor
 		explicit constexpr
-		BasicUSBEndpoint (uint8_t* base_address);
+		BasicUSBSIEEndpoint (uint8_t* base_address);
 
 	  public:
 		// Equality operator
 		constexpr bool
-		operator== (BasicUSBEndpoint const& other) const;
+		operator== (BasicUSBSIEEndpoint const& other) const;
 
 		// Inequality operator
 		constexpr bool
-		operator!= (BasicUSBEndpoint const& other) const;
+		operator!= (BasicUSBSIEEndpoint const& other) const;
 
 		/**
 		 * Initialize endpoint in-memory.
@@ -302,15 +302,15 @@ template<class pMCU>
 
 
 template<class pMCU>
-	class alignas(2) BasicUSBOutputEndpoint: public BasicUSBEndpoint<pMCU>
+	class alignas(2) BasicUSBSIEOutputEndpoint: public BasicUSBSIEEndpoint<pMCU>
 	{
 	  public:
-		using Endpoint = BasicUSBEndpoint<pMCU>;
+		using Endpoint = BasicUSBSIEEndpoint<pMCU>;
 
 	  public:
 		// Ctor
 		explicit constexpr
-		BasicUSBOutputEndpoint (uint8_t* base_address);
+		BasicUSBSIEOutputEndpoint (uint8_t* base_address);
 
 		/**
 		 * Get number of bytes received in the last OUT or SETUP transaction.
@@ -340,15 +340,15 @@ template<class pMCU>
 
 
 template<class pMCU>
-	class alignas(2) BasicUSBInputEndpoint: public BasicUSBEndpoint<pMCU>
+	class alignas(2) BasicUSBSIEInputEndpoint: public BasicUSBSIEEndpoint<pMCU>
 	{
 	  public:
-		using Endpoint = BasicUSBEndpoint<pMCU>;
+		using Endpoint = BasicUSBSIEEndpoint<pMCU>;
 
 	  public:
 		// Ctor
 		explicit constexpr
-		BasicUSBInputEndpoint (uint8_t* base_address);
+		BasicUSBSIEInputEndpoint (uint8_t* base_address);
 
 		/**
 		 * Set number of bytes to be sent in the next IN transaction.
@@ -398,7 +398,7 @@ template<class pMCU>
 
 template<class M>
 	inline constexpr
-	BasicUSBEndpoint<M>::BasicUSBEndpoint (uint8_t* base_address):
+	BasicUSBSIEEndpoint<M>::BasicUSBSIEEndpoint (uint8_t* base_address):
 		_base_address (reinterpret_cast<size_t> (base_address)),
 		_status (_base_address + 0x00),
 		_ctrl (_base_address + 0x01),
@@ -411,7 +411,7 @@ template<class M>
 
 template<class M>
 	constexpr bool
-	BasicUSBEndpoint<M>::operator== (BasicUSBEndpoint const& other) const
+	BasicUSBSIEEndpoint<M>::operator== (BasicUSBSIEEndpoint const& other) const
 	{
 		return _base_address == other._base_address;
 	}
@@ -419,7 +419,7 @@ template<class M>
 
 template<class M>
 	constexpr bool
-	BasicUSBEndpoint<M>::operator!= (BasicUSBEndpoint const& other) const
+	BasicUSBSIEEndpoint<M>::operator!= (BasicUSBSIEEndpoint const& other) const
 	{
 		return !(*this == other);
 	}
@@ -427,7 +427,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::initialize()
+	BasicUSBSIEEndpoint<M>::initialize()
 	{
 		_status.write (0);
 		_ctrl.write (0);
@@ -439,18 +439,15 @@ template<class M>
 
 template<class M>
 	inline auto
-	BasicUSBEndpoint<M>::type() const -> Type
+	BasicUSBSIEEndpoint<M>::type() const -> Type
 	{
-		throw "unimplemented";
-		// TODO
-		// TODO return _ctrl.template get_bits<7, 6>
-		return Type::Disabled;
+		return static_cast<Type> (_ctrl.template get_bits_value<7, 6>());
 	}
 
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set (Type type)
+	BasicUSBSIEEndpoint<M>::set (Type type)
 	{
 		_ctrl.template set_bits_value<7, 6> (static_cast<uint8_t> (type));
 	}
@@ -458,7 +455,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::multipacket_enabled() const
+	BasicUSBSIEEndpoint<M>::multipacket_enabled() const
 	{
 		return _ctrl.template get_bit<5>();
 	}
@@ -466,7 +463,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_multipacket_enabled (bool enabled)
+	BasicUSBSIEEndpoint<M>::set_multipacket_enabled (bool enabled)
 	{
 		_ctrl.template set_bit_value<5> (enabled);
 	}
@@ -474,7 +471,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::ping_pong_enabled() const
+	BasicUSBSIEEndpoint<M>::ping_pong_enabled() const
 	{
 		return _ctrl.template get_bit<4>();
 	}
@@ -482,7 +479,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_ping_pong_enabled (bool enabled)
+	BasicUSBSIEEndpoint<M>::set_ping_pong_enabled (bool enabled)
 	{
 		_ctrl.template set_bit_value<4> (enabled);
 	}
@@ -490,7 +487,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::interrupts_blocked() const
+	BasicUSBSIEEndpoint<M>::interrupts_blocked() const
 	{
 		return _ctrl.template get_bit<3>();
 	}
@@ -498,7 +495,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_interrupts_blocked (bool blocked)
+	BasicUSBSIEEndpoint<M>::set_interrupts_blocked (bool blocked)
 	{
 		_ctrl.template set_bit_value<3> (blocked);
 	}
@@ -506,7 +503,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_stalled (bool enabled)
+	BasicUSBSIEEndpoint<M>::set_stalled (bool enabled)
 	{
 		_ctrl.template set_bit_value<2> (enabled);
 	}
@@ -514,7 +511,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_buffer (uint8_t* buffer)
+	BasicUSBSIEEndpoint<M>::set_buffer (uint8_t* buffer)
 	{
 		_dataptr.write (reinterpret_cast<size_t> (buffer));
 	}
@@ -522,7 +519,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set (ControlBulkBufferSize buffer_size)
+	BasicUSBSIEEndpoint<M>::set (ControlBulkBufferSize buffer_size)
 	{
 		_ctrl.template set_bits_value<1, 0> (static_cast<uint8_t> (buffer_size));
 	}
@@ -530,7 +527,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set (IsochronousBufferSize buffer_size)
+	BasicUSBSIEEndpoint<M>::set (IsochronousBufferSize buffer_size)
 	{
 		_ctrl.template set_bits_value<2, 0> (static_cast<uint8_t> (buffer_size));
 	}
@@ -538,7 +535,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_buffer (uint8_t* buffer, ControlBulkBufferSize buffer_size)
+	BasicUSBSIEEndpoint<M>::set_buffer (uint8_t* buffer, ControlBulkBufferSize buffer_size)
 	{
 		set_buffer (buffer);
 		set (buffer_size);
@@ -547,7 +544,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_buffer (uint8_t* buffer, IsochronousBufferSize buffer_size)
+	BasicUSBSIEEndpoint<M>::set_buffer (uint8_t* buffer, IsochronousBufferSize buffer_size)
 	{
 		set_buffer (buffer);
 		set (buffer_size);
@@ -556,7 +553,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::is_stalled() const
+	BasicUSBSIEEndpoint<M>::is_stalled() const
 	{
 		return this->_status.template get_bit<7>();
 	}
@@ -564,7 +561,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::reset_stall()
+	BasicUSBSIEEndpoint<M>::reset_stall()
 	{
 		atomic_sram_set_bit<7> (this->_status.ref());
 	}
@@ -572,7 +569,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::is_crc_error() const
+	BasicUSBSIEEndpoint<M>::is_crc_error() const
 	{
 		return this->_status.template get_bit<7>();
 	}
@@ -580,7 +577,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::reset_crc_error()
+	BasicUSBSIEEndpoint<M>::reset_crc_error()
 	{
 		atomic_sram_set_bit<7> (this->_status.ref());
 	}
@@ -588,7 +585,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::transaction_complete() const
+	BasicUSBSIEEndpoint<M>::transaction_complete() const
 	{
 		return this->_status.template get_bit<5>();
 	}
@@ -596,7 +593,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::reset_transaction_complete()
+	BasicUSBSIEEndpoint<M>::reset_transaction_complete()
 	{
 		atomic_sram_clear_bit<5> (this->_status.ref());
 	}
@@ -604,7 +601,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::setup_transaction_complete() const
+	BasicUSBSIEEndpoint<M>::setup_transaction_complete() const
 	{
 		return this->_status.template get_bit<4>();
 	}
@@ -612,7 +609,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::reset_setup_transaction_complete()
+	BasicUSBSIEEndpoint<M>::reset_setup_transaction_complete()
 	{
 		atomic_sram_clear_bit<4> (this->_status.ref());
 	}
@@ -620,7 +617,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::wait_for_transaction_complete() const
+	BasicUSBSIEEndpoint<M>::wait_for_transaction_complete() const
 	{
 		while (!transaction_complete())
 			continue;
@@ -629,7 +626,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBEndpoint<M>::is_nack_all (Buffer buffer) const
+	BasicUSBSIEEndpoint<M>::is_nack_all (Buffer buffer) const
 	{
 		switch (buffer)
 		{
@@ -647,7 +644,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_nack_all (Buffer buffer, bool nack)
+	BasicUSBSIEEndpoint<M>::set_nack_all (Buffer buffer, bool nack)
 	{
 		switch (buffer)
 		{
@@ -664,7 +661,7 @@ template<class M>
 
 template<class M>
 	inline auto
-	BasicUSBEndpoint<M>::next_data_packet() const -> Data
+	BasicUSBSIEEndpoint<M>::next_data_packet() const -> Data
 	{
 		return this->_status.template get_bit<0>() ? Data::_1 : Data::_0;
 	}
@@ -672,7 +669,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_next_data_packet (Data data)
+	BasicUSBSIEEndpoint<M>::set_next_data_packet (Data data)
 	{
 		switch (data)
 		{
@@ -689,7 +686,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBEndpoint<M>::set_ready()
+	BasicUSBSIEEndpoint<M>::set_ready()
 	{
 		atomic_sram_clear_bitmask<kUnderflowOverflow | kTransactionComplete | kTransactionComplete1 | kBusNack1 | kBusNack0> (this->_status.ref());
 	}
@@ -697,14 +694,14 @@ template<class M>
 
 template<class M>
 	constexpr
-	BasicUSBOutputEndpoint<M>::BasicUSBOutputEndpoint (uint8_t* base_address):
-		BasicUSBEndpoint<M> (base_address)
+	BasicUSBSIEOutputEndpoint<M>::BasicUSBSIEOutputEndpoint (uint8_t* base_address):
+		BasicUSBSIEEndpoint<M> (base_address)
 	{ }
 
 
 template<class M>
 	inline size_t
-	BasicUSBOutputEndpoint<M>::transaction_size() const
+	BasicUSBSIEOutputEndpoint<M>::transaction_size() const
 	{
 		return this->_cnt.read();
 	}
@@ -712,7 +709,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBOutputEndpoint<M>::set_total_transfer_size (size_t bytes)
+	BasicUSBSIEOutputEndpoint<M>::set_total_transfer_size (size_t bytes)
 	{
 		this->_auxdata = bytes;
 	}
@@ -720,7 +717,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBOutputEndpoint<M>::is_overflow() const
+	BasicUSBSIEOutputEndpoint<M>::is_overflow() const
 	{
 		return this->_status.template get_bit<6>();
 	}
@@ -728,7 +725,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBOutputEndpoint<M>::reset_overflow()
+	BasicUSBSIEOutputEndpoint<M>::reset_overflow()
 	{
 		atomic_sram_clear_bit<6> (this->_status.ref());
 	}
@@ -736,14 +733,14 @@ template<class M>
 
 template<class M>
 	constexpr
-	BasicUSBInputEndpoint<M>::BasicUSBInputEndpoint (uint8_t* base_address):
-		BasicUSBEndpoint<M> (base_address)
+	BasicUSBSIEInputEndpoint<M>::BasicUSBSIEInputEndpoint (uint8_t* base_address):
+		BasicUSBSIEEndpoint<M> (base_address)
 	{ }
 
 
 template<class M>
 	inline void
-	BasicUSBInputEndpoint<M>::set_transaction_size (size_t bytes)
+	BasicUSBSIEInputEndpoint<M>::set_transaction_size (size_t bytes)
 	{
 		this->_cnt.write ((this->_cnt.read() & 0b10000000'00000000) | (bytes & 0b00000011'11111111));
 	}
@@ -751,7 +748,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBInputEndpoint<M>::set_azlp_enabled (bool enabled)
+	BasicUSBSIEInputEndpoint<M>::set_azlp_enabled (bool enabled)
 	{
 		this->_cnth.template set_bit_value<7> (enabled);
 	}
@@ -759,7 +756,7 @@ template<class M>
 
 template<class M>
 	inline size_t
-	BasicUSBInputEndpoint<M>::total_transfer_size() const
+	BasicUSBSIEInputEndpoint<M>::total_transfer_size() const
 	{
 		return this->_auxdata.read();
 	}
@@ -767,7 +764,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBInputEndpoint<M>::reset_total_transfer_size()
+	BasicUSBSIEInputEndpoint<M>::reset_total_transfer_size()
 	{
 		this->_auxdata = 0;
 	}
@@ -775,7 +772,7 @@ template<class M>
 
 template<class M>
 	inline bool
-	BasicUSBInputEndpoint<M>::is_underflow() const
+	BasicUSBSIEInputEndpoint<M>::is_underflow() const
 	{
 		return this->_status.template get_bit<6>();
 	}
@@ -783,7 +780,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBInputEndpoint<M>::reset_underflow()
+	BasicUSBSIEInputEndpoint<M>::reset_underflow()
 	{
 		atomic_sram_clear_bit<6> (this->_status.ref());
 	}
@@ -791,7 +788,7 @@ template<class M>
 
 template<class M>
 	inline void
-	BasicUSBInputEndpoint<M>::set_ready (size_t bytes)
+	BasicUSBSIEInputEndpoint<M>::set_ready (size_t bytes)
 	{
 		set_transaction_size (bytes);
 		Endpoint::set_ready();
