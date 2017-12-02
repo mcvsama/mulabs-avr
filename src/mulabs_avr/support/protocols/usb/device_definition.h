@@ -193,7 +193,7 @@ class Device
 	 * Return maximum endpoint address.
 	 */
 	constexpr uint8_t
-	maximum_endpoint_id() const;
+	maximum_endpoint_address() const;
 
 	/**
 	 * Return maximum index of string-descriptor used by this configuration.
@@ -408,7 +408,7 @@ Device::Device (USBVersion usb_version, VendorID vendor_id, ProductID product_id
 
 
 constexpr uint8_t
-Device::maximum_endpoint_id() const
+Device::maximum_endpoint_address() const
 {
 	uint8_t max = 0;
 

@@ -29,22 +29,24 @@ namespace usb {
 /**
  * This class handles the setup packets on the USB bus and replies according to the provided USB device definition.
  */
-template<class pDeviceStrings, class pUSBModule, class pInputEndpoint, class pInputBuffer, class pOutputEndpoint, class pOutputBuffer>
+template<class pUSBSIE, pUSBSIE const& vUSBSIE, class pDeviceStrings, class pInputBuffer, class pOutputBuffer>
 	class SetupConductor
 	{
 	  public:
+		using USBSIE				= pUSBSIE;
 		using DeviceStringsType		= pDeviceStrings;
-		using USBModule				= pUSBModule;
-		using InputEndpoint			= pInputEndpoint;
+		using InputEndpoint			= typename USBSIE::InputEndpoint;
 		using InputBuffer			= pInputBuffer;
-		using OutputEndpoint		= pOutputEndpoint;
+		using OutputEndpoint		= typename USBSIE::OutputEndpoint;
 		using OutputBuffer			= pOutputBuffer;
 		using ControlTransferType	= ControlTransfer<InputEndpoint, InputBuffer, OutputEndpoint, OutputBuffer, 64>; // TODO user-configurable buffer-size
+
+		static constexpr USBSIE const&	usb_sie	= vUSBSIE;
 
 	  public:
 		// Ctor
 		explicit constexpr
-		SetupConductor (Device const& device, DeviceStringsType const&, USBModule&, InputEndpoint&, InputBuffer&, OutputEndpoint&, OutputBuffer&);
+		SetupConductor (Device const& device, DeviceStringsType const&, InputEndpoint&, InputBuffer&, OutputEndpoint&, OutputBuffer&);
 
 		/**
 		 * Check endpoints and handle setup packets as needed.
@@ -70,7 +72,6 @@ template<class pDeviceStrings, class pUSBModule, class pInputEndpoint, class pIn
 	  private:
 		Device const&				_device;
 		DeviceStringsType const&	_device_strings;
-		USBModule&					_usb;
 		InputEndpoint&				_input_endpoint;
 		InputBuffer&				_input_buffer;
 		OutputEndpoint&				_output_endpoint;
@@ -81,15 +82,13 @@ template<class pDeviceStrings, class pUSBModule, class pInputEndpoint, class pIn
 	};
 
 
-template<class DS, class U, class IE, class IB, class OE, class OB>
+template<class U, U const& vU, class DS, class IB, class OB>
 	constexpr
-	SetupConductor<DS, U, IE, IB, OE, OB>::SetupConductor (Device const& device, DeviceStringsType const& device_strings,
-														   USBModule& usb,
-														   InputEndpoint& input_endpoint, InputBuffer& input_buffer,
-														   OutputEndpoint& output_endpoint, OutputBuffer& output_buffer):
+	SetupConductor<U, vU, DS, IB, OB>::SetupConductor (Device const& device, DeviceStringsType const& device_strings,
+													   InputEndpoint& input_endpoint, InputBuffer& input_buffer,
+													   OutputEndpoint& output_endpoint, OutputBuffer& output_buffer):
 		_device (device),
 		_device_strings (device_strings),
-		_usb (usb),
 		_input_endpoint (input_endpoint),
 		_input_buffer (input_buffer),
 		_output_endpoint (output_endpoint),
@@ -97,10 +96,10 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 	{ }
 
 
-template<class DS, class U, class IE, class IB, class OE, class OB>
+template<class U, U const& vU, class DS, class IB, class OB>
 	template<class Debug>
 		inline void
-		SetupConductor<DS, U, IE, IB, OE, OB>::handle_interrupt (Debug&& debug)
+		SetupConductor<U, vU, DS, IB, OB>::handle_interrupt (Debug&& debug)
 		{
 			if (_input_endpoint.is_stalled() || _output_endpoint.is_stalled())
 			{
@@ -113,6 +112,9 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 				debug ("!!! CRC error\n");
 				// TODO stall the endpoint and report to the user
 			}
+
+			if (usb_sie.triggered (std::remove_reference_t<decltype (usb_sie)>::InterruptFlag::Reset))
+				reset();
 
 			auto on_setup = [&] (SetupPacket const& setup, [[maybe_unused]] Span<uint8_t> output_data) {
 				// XXX remove debug
@@ -130,7 +132,7 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 
 			auto on_finished = [&] {
 				if (_address_to_set != 0)
-					_usb.set_address (std::exchange (_address_to_set, 0));
+					usb_sie.set_address (std::exchange (_address_to_set, 0));
 				debug ("  Finished\n");
 			};
 
@@ -142,19 +144,19 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 		}
 
 
-template<class DS, class U, class IE, class IB, class OE, class OB>
+template<class U, U const& vU, class DS, class IB, class OB>
 	inline void
-	SetupConductor<DS, U, IE, IB, OE, OB>::reset() noexcept
+	SetupConductor<U, vU, DS, IB, OB>::reset() noexcept
 	{
 		_address_to_set = 0;
 		_transfer.reset();
 	}
 
 
-template<class DS, class U, class IE, class IB, class OE, class OB>
+template<class U, U const& vU, class DS, class IB, class OB>
 	template<class Debug>
 		inline bool
-		SetupConductor<DS, U, IE, IB, OE, OB>::handle_setup_packet (SetupPacket const& setup, ControlTransferType& transfer, Debug&& debug)
+		SetupConductor<U, vU, DS, IB, OB>::handle_setup_packet (SetupPacket const& setup, ControlTransferType& transfer, Debug&& debug)
 		{
 			// By default, don't return anything:
 			transfer.set_transfer_size (0);
@@ -173,23 +175,23 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 							switch (setup.request.device.type)
 							{
 								case Type::GetStatus:
+								{
 									debug ("  DeviceRequest::GetStatus\n");
 									// Bit 0 is SelfPowered (1 if true)
 									// Bit 1 is RemoteWakeup (1 if true)
-									// TODO get these bits from the _device:
-									transfer.buffer()[0] = 0b00000001;
+									uint8_t lsb = 0;
+
+									transfer.buffer()[0] = lsb;
 									transfer.buffer()[1] = 0;
 									transfer.set_transfer_size (2);
 									break;
+								}
 
 								case Type::GetDescriptor:
-									debug ("  DeviceRequest::GetDescriptor\n");
-
 									switch (setup.request.device.get_descriptor.type)
 									{
 										case DescriptorType::Device:
 										{
-											debug ("    DescriptorType::Device\n");
 											auto const desc = make_device_descriptor (_device, _device_strings);
 											transfer.buffer().template as<DeviceDescriptor>() = desc;
 											transfer.set_transfer_size (std::min (setup.length, sizeof (desc)));
@@ -198,7 +200,6 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 
 										case DescriptorType::Configuration:
 										{
-											debug ("    DescriptorType::Configuration\n");
 											// A request for the configuration descriptor should return the device descriptor and all interface and endpoint
 											// descriptors in one request.
 											size_t size = make_full_configuration_descriptor (transfer.buffer(), _device, setup.request.device.get_descriptor.index, _device_strings);
@@ -208,7 +209,6 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 
 										case DescriptorType::String:
 										{
-											debug ("    DescriptorType::String\n");
 											auto const index = setup.request.device.get_descriptor.index;
 
 											if (index == 0)
@@ -226,11 +226,11 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 										}
 
 										case DescriptorType::Interface:
-											debug ("    DescriptorType::Interface\n");
+											// Ignore. USB protocol doesn't allow asking for individual interface descriptors.
 											break;
 
 										case DescriptorType::Endpoint:
-											debug ("    DescriptorType::Endpoint\n");
+											// Ignore. USB protocol doesn't allow asking for individual endpoint descriptors.
 											break;
 
 										case DescriptorType::BOS:
@@ -256,7 +256,6 @@ template<class DS, class U, class IE, class IB, class OE, class OB>
 									break;
 
 								case Type::SetAddress:
-									debug ("  DeviceRequest::SetAddress %u\n", (unsigned)setup.request.device.set_address.address);
 									// Address should be set after completion of the status stage, so just remember it for now:
 									_address_to_set = setup.request.device.set_address.address;
 									break;
