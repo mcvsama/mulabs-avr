@@ -157,7 +157,7 @@ class ATXMega128A1U
 	 * Execute single no-operation instruction.
 	 */
 	static void
-	nop()
+	nop() noexcept
 	{
 		_NOP();
 	}
@@ -166,7 +166,7 @@ class ATXMega128A1U
 	 * Sleep for given number of milliseconds.
 	 */
 	static void
-	sleep_ms (int ms)
+	sleep_ms (int ms) noexcept
 	{
 		for (int z = 0; z < ms; ++z)
 			_delay_ms (1);
@@ -177,7 +177,7 @@ class ATXMega128A1U
 	 */
 	template<int MS>
 		static void
-		sleep_ms()
+		sleep_ms() noexcept
 		{
 			_delay_ms (MS);
 		}
@@ -186,7 +186,7 @@ class ATXMega128A1U
 	 * Sleep for given number of microseconds.
 	 */
 	static void
-	sleep_us (int us)
+	sleep_us (int us) noexcept
 	{
 		for (int z = 0; z < us / 20; ++z)
 			_delay_us (20);
@@ -197,7 +197,7 @@ class ATXMega128A1U
 	 */
 	template<int US>
 		static void
-		sleep_us()
+		sleep_us() noexcept
 		{
 			_delay_us (US);
 		}
@@ -222,7 +222,7 @@ class ATXMega128A1U
 	 * Read register from the signature row.
 	 */
 	static uint8_t
-	read (SignatureRegister);
+	read (SignatureRegister) noexcept;
 };
 
 
@@ -241,7 +241,7 @@ ATXMega128A1U::disable_configuration_change_protection_for_spmlpm()
 
 
 inline uint8_t
-ATXMega128A1U::read (SignatureRegister reg)
+ATXMega128A1U::read (SignatureRegister reg) noexcept
 {
 	NVM.CMD = NVM_CMD_READ_CALIB_ROW_gc;
 	return pgm_read_byte (static_cast<uint8_t> (reg));

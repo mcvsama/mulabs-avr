@@ -80,7 +80,7 @@ class ATMega32U4
 	 * Execute single no-operation instruction.
 	 */
 	static void
-	nop()
+	nop() noexcept
 	{
 		_NOP();
 	}
@@ -89,7 +89,7 @@ class ATMega32U4
 	 * Sleep for given number of milliseconds.
 	 */
 	static void
-	sleep_ms (int ms)
+	sleep_ms (int ms) noexcept
 	{
 		for (int z = 0; z < ms; ++z)
 			_delay_ms (1);
@@ -100,7 +100,7 @@ class ATMega32U4
 	 */
 	template<int MS>
 		static void
-		sleep_ms()
+		sleep_ms() noexcept
 		{
 			_delay_ms (MS);
 		}
@@ -109,7 +109,7 @@ class ATMega32U4
 	 * Sleep for given number of microseconds.
 	 */
 	static void
-	sleep_us (int us)
+	sleep_us (int us) noexcept
 	{
 		for (int z = 0; z < us / 20; ++z)
 			_delay_us (20);
@@ -120,7 +120,7 @@ class ATMega32U4
 	 */
 	template<int US>
 		static void
-		sleep_us()
+		sleep_us() noexcept
 		{
 			_delay_us (US);
 		}
