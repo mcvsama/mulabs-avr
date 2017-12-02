@@ -329,17 +329,13 @@ template<class pMCU>
 			static constexpr uint8_t
 			make_oscillators_list (Oscillator oscillator, Oscillators ...oscillators)
 			{
-				return make_oscillators_list (oscillator) | make_oscillators_list (oscillators...);
-			}
+				uint8_t result = get_oscillator_bit (oscillator);
 
-		/**
-		 * Recursive stop-condition for make_oscillators_list().
-		 */
-		static constexpr uint8_t
-		make_oscillators_list (Oscillator oscillator)
-		{
-			return get_oscillator_bit (oscillator);
-		}
+				if constexpr (sizeof... (oscillators) > 0)
+					result |= make_oscillators_list (oscillators...);
+
+				return result;
+			}
 
 		/**
 		 * Return oscillator bit for registers like OSC_CTRL or OSC_STATUS.

@@ -53,17 +53,13 @@ class InterruptSystem
 		static constexpr uint8_t
 		make_levels_list (Level level, Levels ...levels)
 		{
-			return make_levels_list (level) | make_levels_list (levels...);
-		}
+			uint8_t result = get_level_bit (level);
 
-	/**
-	 * Recursive stop-condition for make_oscillators_list().
-	 */
-	static constexpr uint8_t
-	make_levels_list (Level level)
-	{
-		return get_level_bit (level);
-	}
+			if constexpr (sizeof... (levels) > 0)
+				result |= make_levels_list (levels...);
+
+			return result;
+		}
 
 	/**
 	 * Return level bit for registers like PMIC_CTRL.

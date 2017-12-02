@@ -122,7 +122,7 @@ template<class T>
 	{ };
 
 
-template <class T>
+template<class T>
 	constexpr bool is_const_v = is_const<T>::value;
 
 
@@ -136,8 +136,28 @@ template<class T>
 	{ };
 
 
-template <class T>
+template<class T>
 	constexpr bool is_literal_type_v = is_literal_type<T>::value;
+
+
+/*
+ * std::is_same
+ * std::is_same_v
+ */
+
+
+template<class, class>
+	struct is_same: public false_type
+	{ };
+
+
+template<class T>
+	struct is_same<T, T>: public true_type
+	{ };
+
+
+template<class T1, class T2>
+	constexpr bool is_same_v = is_same<T1, T2>::value;
 
 } // namespace std
 } // namespace avr

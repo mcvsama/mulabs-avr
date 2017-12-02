@@ -35,6 +35,12 @@ struct __si_class_type_info
 	{ }
 } si_class_type_info;
 
+struct __enum_type_info
+{
+	virtual void unused()
+	{ }
+} enum_type_info;
+
 } // namespace __cxxabiv1
 
 

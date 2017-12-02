@@ -66,25 +66,22 @@ template<class pMCU>
 		/**
 		 * Recursive function that collects Pins.
 		 */
-		template<class Pin, class ...Pins>
+		template<class Pin, class ...pPins>
 			static constexpr PinSet
-			make_pin_set (Pin const pin, Pins const ...pins)
+			make_pin_set (Pin const pin, pPins const ...pins)
 			{
-				auto new_pins = make_pin_set (pins...).pins();
-				new_pins.set_bit (pin.absolute_pin_number());
-				return PinSet (new_pins);
-			}
-
-		/**
-		 * Recursive stop-condition for make_pin_set().
-		 */
-		template<class Pin>
-			static constexpr PinSet
-			make_pin_set (Pin const pin)
-			{
-				typename MCU::Pins pins { };
-				pins.set_bit (pin.absolute_pin_number());
-				return PinSet (pins);
+				if constexpr (sizeof... (pins) > 0)
+				{
+					auto new_pins = make_pin_set (pins...).pins();
+					new_pins.set_bit (pin.absolute_pin_number());
+					return PinSet (new_pins);
+				}
+				else
+				{
+					typename MCU::Pins result_pins { };
+					result_pins.set_bit (pin.absolute_pin_number());
+					return PinSet (result_pins);
+				}
 			}
 	};
 

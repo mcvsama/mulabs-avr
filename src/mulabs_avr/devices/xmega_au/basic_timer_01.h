@@ -15,6 +15,7 @@
 #define MULABS_AVR__DEVICES__XMEGA_AU__BASIC_TIMER_01_H__INCLUDED
 
 #include <mulabs_avr/devices/xmega_au/interrupt_system.h>
+#include <mulabs_avr/std/type_traits.h>
 #include <mulabs_avr/utility/bits.h>
 
 
@@ -288,17 +289,13 @@ template<class pMCU>
 			constexpr uint8_t
 			make_channels_list (CompareCaptureChannel channel, Channels ...channels) const
 			{
-				return make_channels_list (channel) | make_channels_list (channels...);
-			}
+				uint8_t result = static_cast<uint8_t> (channel) << 4;
 
-		/**
-		 * Recursive stop-condition for make_channels_list().
-		 */
-		constexpr uint8_t
-		make_channels_list (CompareCaptureChannel channel) const
-		{
-			return static_cast<uint8_t> (channel) << 4;
-		}
+				if constexpr (sizeof... (channels) > 0)
+					result |= make_channels_list (channels...);
+
+				return result;
+			}
 
 		/**
 		 * Helper for mark_buffers_(in)valid().
@@ -308,26 +305,17 @@ template<class pMCU>
 			constexpr uint8_t
 			make_buffers_list (Buffer buffer, Buffers ...buffers) const
 			{
-				return make_buffers_list (buffer) | make_buffers_list (buffers...);
+				static_assert (std::is_same<Buffer, CompareCaptureChannel>() || std::is_same<Buffer, PeriodBufferType>());
+
+				uint8_t result = std::is_same<Buffer, CompareCaptureChannel>()
+					? static_cast<uint8_t> (buffer) << 1
+					: 0b1;
+
+				if constexpr (sizeof... (buffers) > 0)
+					result |= make_buffers_list (buffers...);
+
+				return result;
 			}
-
-		/**
-		 * Recursive stop-condition for make_buffers_list().
-		 */
-		constexpr uint8_t
-		make_buffers_list (CompareCaptureChannel channel) const
-		{
-			return static_cast<uint8_t> (channel) << 1;
-		}
-
-		/**
-		 * Recursive stop-condition for make_buffers_list().
-		 */
-		constexpr uint8_t
-		make_buffers_list (PeriodBufferType) const
-		{
-			return 0b1;
-		}
 
 	  private:
 		size_t const	_base_address;
