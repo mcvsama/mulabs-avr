@@ -22,6 +22,11 @@ namespace mulabs {
 namespace avr {
 namespace xmega_au {
 
+// Thrown when given pin doesn't belong to given port.
+class WrongPinToPort
+{ };
+
+
 template<class pMCU>
 	class BasicPort
 	{
@@ -195,23 +200,16 @@ template<class pMCU>
 			constexpr typename MCU::PortIntegerType
 			make_pin_set (Pin const pin, Pins const ...pins) const
 			{
-				// TODO: if constexpr (pin.port() != *this)
-				// TODO:	static_assert (false, "wrong Pin passed to the port");
+				if (pin.port() != *this)
+					throw WrongPinToPort();
 
-				return (1 << pin.pin_number()) | make_pin_set (pins...);
+				typename MCU::PortIntegerType result = 1u << pin.pin_number();
+
+				if constexpr (sizeof... (pins) > 0)
+					result |= make_pin_set (pins...);
+
+				return result;
 			}
-
-		/**
-		 * Recursive stop-condition for make_pin_set().
-		 */
-		constexpr typename MCU::PortIntegerType
-		make_pin_set (Pin const pin) const
-		{
-			// TODO: if constexpr (pin.port() != *this)
-			// TODO:	static_assert (false, "wrong Pin passed to the port");
-
-			return 1 << pin.pin_number();
-		}
 
 	  private:
 		size_t const	_base_address;
