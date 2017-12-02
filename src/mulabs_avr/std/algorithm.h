@@ -86,21 +86,21 @@ template<class T, class Compare>
 	}
 
 
-template<class T, class Compare>
-	constexpr T const&
-	max (const T& a, const T& b, Compare comp)
-	{
-		if (comp (a, b))
-			return b;
-		return a;
-	}
-
-
 template<class T>
 	constexpr T const&
 	max (const T& a, const T& b)
 	{
 		if (a < b)
+			return b;
+		return a;
+	}
+
+
+template<class T, class Compare>
+	constexpr T const&
+	max (const T& a, const T& b, Compare comp)
+	{
+		if (comp (a, b))
 			return b;
 		return a;
 	}
