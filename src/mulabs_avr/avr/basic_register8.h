@@ -99,6 +99,13 @@ class BasicRegister8
 		bool
 		get_bit() const;
 
+	/**
+	 * Get unsigned int value from given bits (right-shifted).
+	 */
+	template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit>
+		uint8_t
+		get_bits_value() const;
+
   private:
 	size_t	_address;
 };
@@ -180,10 +187,7 @@ template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit>
 	inline void
 	BasicRegister8::set_bits_value (uint8_t value) const
 	{
-		static_assert (LeastSignificantBit <= MostSignificantBit);
-
-		uint8_t const mask = static_cast<uint8_t> (0xff << (MostSignificantBit + 1)) | static_cast<uint8_t> (0xff >> (8 - LeastSignificantBit));
-		ref() = (ref() & mask) | (value << LeastSignificantBit);
+		mulabs::avr::set_bits_value<MostSignificantBit, LeastSignificantBit> (ref(), value);
 	}
 
 
@@ -192,6 +196,14 @@ template<uint8_t Bit>
 	BasicRegister8::get_bit() const
 	{
 		return mulabs::avr::get_bit<Bit> (ref());
+	}
+
+
+template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit>
+	inline uint8_t
+	BasicRegister8::get_bits_value() const
+	{
+		return mulabs::avr::get_bits_value<MostSignificantBit, LeastSignificantBit> (ref());
 	}
 
 } // namespace avr

@@ -68,6 +68,43 @@ template<uint8_t Bit, class R>
 	}
 
 
+template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit, class R>
+	static constexpr R
+	mask_of_ones()
+	{
+		constexpr uint8_t BitWidth = sizeof (R) * 8;
+
+		static_assert (LeastSignificantBit <= MostSignificantBit);
+		static_assert (MostSignificantBit < BitWidth);
+
+		R const ffff = static_cast<R> (-1);
+		R const upper_mask = MostSignificantBit + 1 < BitWidth
+			? static_cast<R> (ffff << (MostSignificantBit + 1))
+			: 0;
+		R const lower_mask = LeastSignificantBit > 0
+			? static_cast<R> (ffff >> (BitWidth - LeastSignificantBit))
+			: 0;
+
+		return static_cast<R> (~(upper_mask | lower_mask));
+	}
+
+
+template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit, class R>
+	static constexpr void
+	set_bits_value (R volatile& reg, R value)
+	{
+		reg = (reg & ~mask_of_ones<MostSignificantBit, LeastSignificantBit, R>()) | (value << LeastSignificantBit);
+	}
+
+
+template<uint8_t MostSignificantBit, uint8_t LeastSignificantBit, class R>
+	static constexpr R
+	get_bits_value (R volatile& reg)
+	{
+		return (reg & mask_of_ones<MostSignificantBit, LeastSignificantBit, R>()) >> LeastSignificantBit;
+	}
+
+
 /**
  * Swap MSB-LSB bits in a byte.
  */
